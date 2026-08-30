@@ -1,0 +1,22 @@
+{
+  "name": "RuBing Pan",
+  "nameCN": "ru-bing-pan",
+  "version": "2.0",
+  "generatedAt": "2026-08-30T08:49:51.211Z",
+  "baseUrl": "",
+  "chunkExtension": "rbpan",
+  "files": [
+    {
+      "name": "RuBing_Pan_测试文件.txt",
+      "path": "RuBing_Pan_测试文件.txt",
+      "type": "file",
+      "size": 169,
+      "lastModified": "2026-08-29T12:14:57.936Z",
+      "sha256": "f98f7af160340ac3fdf114a4439ca0635950d613505c2f8699f1c69e7e8cbc8c",
+      "chunks": 1,
+      "files": [
+        "RuBing_Pan_测试文件.txt"
+      ]
+    }
+  ]
+}
