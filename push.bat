@@ -232,6 +232,16 @@ set "REPO_URL=%~2"
 set "BRANCH=%~3"
 set "MSG=%~4"
 
+REM 将 HTTPS URL 转换为 SSH URL
+echo !REPO_URL! | findstr /c:"https://" >nul
+if not errorlevel 1 (
+    for /f "tokens=3 delims=/" %%a in ("!REPO_URL!") do set "REPO_HOST=%%a"
+    for /f "tokens=4 delims=/" %%a in ("!REPO_URL!") do set "REPO_PATH=%%a"
+    if defined REPO_HOST if defined REPO_PATH (
+        set "REPO_URL=git@!REPO_HOST!:!REPO_PATH!"
+    )
+)
+
 git --version >nul 2>&1
 if errorlevel 1 (
     echo !T_GITNF!

@@ -177,6 +177,15 @@ git_push() {
   git fetch origin "$branch" --depth=1 --no-tags 2>/dev/null || true
 
   echo "$T_AFILES"
+  # 将 HTTPS URL 转换为 SSH URL
+  if echo "$repo_url" | grep -q "https://"; then
+    host=$(echo "$repo_url" | sed -E 's|https://([^/]+)/.*|\1|')
+    path=$(echo "$repo_url" | sed -E 's|https://[^/]+/(.*)|\1|')
+    if [ -n "$host" ] && [ -n "$path" ]; then
+      repo_url="git@${host}:${path}"
+    fi
+  fi
+
   git config core.autocrlf false
   git add -A
 
