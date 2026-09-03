@@ -179,10 +179,14 @@ git_push() {
   echo "$T_AFILES"
   # 将 HTTPS URL 转换为 SSH URL
   if echo "$repo_url" | grep -q "https://"; then
-    host=$(echo "$repo_url" | sed -E 's|https://([^/]+)/.*|\1|')
-    path=$(echo "$repo_url" | sed -E 's|https://[^/]+/(.*)|\1|')
-    if [ -n "$host" ] && [ -n "$path" ]; then
-      repo_url="git@${host}:${path}"
+    # 移除 https:// 和 .git 后缀
+    clean_url=$(echo "$repo_url" | sed 's|https://||;s|\.git$||')
+    # 提取主机名、用户名和仓库名
+    host=$(echo "$clean_url" | cut -d'/' -f1)
+    user=$(echo "$clean_url" | cut -d'/' -f2)
+    repo=$(echo "$clean_url" | cut -d'/' -f3)
+    if [ -n "$host" ] && [ -n "$user" ] && [ -n "$repo" ]; then
+      repo_url="git@${host}:${user}/${repo}"
     fi
   fi
 

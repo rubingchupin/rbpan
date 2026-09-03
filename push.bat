@@ -235,10 +235,15 @@ set "MSG=%~4"
 REM 将 HTTPS URL 转换为 SSH URL
 echo !REPO_URL! | findstr /c:"https://" >nul
 if not errorlevel 1 (
-    for /f "tokens=3 delims=/" %%a in ("!REPO_URL!") do set "REPO_HOST=%%a"
-    for /f "tokens=4 delims=/" %%a in ("!REPO_URL!") do set "REPO_PATH=%%a"
-    if defined REPO_HOST if defined REPO_PATH (
-        set "REPO_URL=git@!REPO_HOST!:!REPO_PATH!"
+    set "REPO_URL_TMP=!REPO_URL:https://=!"
+    set "REPO_URL_TMP=!REPO_URL_TMP:.git=!"
+    for /f "tokens=1,2,3,* delims=/" %%a in ("!REPO_URL_TMP!") do (
+        set "REPO_HOST=%%a"
+        set "REPO_USER=%%b"
+        set "REPO_NAME=%%c"
+    )
+    if defined REPO_HOST if defined REPO_USER if defined REPO_NAME (
+        set "REPO_URL=git@!REPO_HOST!:!REPO_USER!/!REPO_NAME!"
     )
 )
 
