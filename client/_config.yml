@@ -1,0 +1,98 @@
+# ===== 站点信息 =====
+title: 'rbpan'
+subtitle: '轻量级网盘系统'
+description: 'Lightweight cloud drive system'
+language: 'zh-CN'
+# 网页图标（相对于 source/ 目录，如 'favicon.ico' 或完整 URL）
+favicon: './img/favicon.png'
+
+# ===== 构建配置 =====
+# CLI 语言: 'en' | 'zh-CN'
+cliLang: 'zh-CN'
+# 输出目录
+outputDir: './dist'
+# 压缩 JS/CSS/HTML（生产环境推荐开启）
+minify: true
+# 开发服务器端口
+devPort: 3000
+
+# ===== 数据源 =====
+# manifest.json 的完整 URL（由 server 生成）
+manifestUrl: 'https://pan-data.rubing.us.kg/manifest.json'
+# 本地回退 manifest URL（本地开发时使用）
+localFallback: 'http://localhost:3001/manifest.json'
+
+# ===== 下载配置 =====
+# 下载线程数（1-16）
+downloadThreads: 6
+
+# ===== 主题配置 =====
+# 主题名称（对应 themes/ 目录下的文件夹名）
+theme: 'default'
+# 默认主题模式: 'light' | 'dark'
+defaultTheme: 'light'
+# 自定义主题色（十六进制，如 '#6366f1'，留空使用默认）
+accentColor: ''
+# 界面风格预设: 'glass' | 'gaussian' | 'liquid' | 'opaque' | 'solid'
+# 毛玻璃 / 高斯模糊 / 液态玻璃 / 不透明圆角 / 纯色方角
+preset: 'glass'
+# 背景图片 URL（留空不使用，部署后用户无法修改）
+bgImage: './img/bg.png'
+# 全局字体配置
+# family: 字体族名称（所有字体文件共用此名称，必填）
+# files: 自定义字体文件列表（相对于 source/ 目录）
+#   - path: 字体文件路径
+#     weight: 字体粗细（normal/bold/100-900）
+#     style: 字体样式（normal/italic）
+#     name: 字体名称（可选，留空使用 family 值）
+# 支持格式：woff2, woff, ttf, otf
+font:
+  family: 'MapleMono'
+  files:
+    - path: './fonts/MapleMono.woff2'
+      weight: normal
+      style: normal
+  # 示例:
+  # family: "MyCustomFont"
+  # files:
+  #   - path: './fonts/my-font-regular.woff2'
+  #     weight: normal
+  #     style: normal
+  #   - path: './fonts/my-font-bold.woff2'
+  #     weight: bold
+  #     style: normal
+  #   - path: './fonts/my-font-italic.woff2'
+  #     weight: normal
+  #     style: italic
+# 自定义 CSS 文件列表（URL 数组，从外部加载）
+customCss: []
+# 自定义 JS 文件列表（URL 数组，从外部加载，defer）
+customJs: []
+
+# ===== 自定义 HTML 注入 =====
+# 注入到 <head> 末尾的原始 HTML（如 meta、link 标签）
+customHead: ''
+# 注入到 <body> 开头的原始 HTML（如自定义导航栏）
+customBody: ''
+
+# ===== 页脚配置 =====
+# 页脚文本（支持 HTML）
+footerText: ''
+# 页脚链接 URL
+footerUrl: 'https://github.com/rubingchupin/rbpan'
+
+# 背景模糊强度：0-20（px），设为 0 禁用
+backdropBlur: 8
+
+# 启用毛玻璃 / 半透明背景效果
+beautify: true
+
+# ===== 插件 =====
+plugins: []
+
+# ===== Git 部署 =====
+deploy:
+  enabled: false
+  repoUrl: 'https://github.com/rubingchupin/rbpan.git'
+  repoBranch: 'client'
+  commitMessage: 'Deploy: rbpan Client'

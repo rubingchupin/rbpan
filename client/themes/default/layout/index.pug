@@ -1,0 +1,281 @@
+doctype html
+html(lang="zh-CN" translate="no" data-theme="light" class="BEAUTIFY_CLASS")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    meta(name="google" content="notranslate")
+    title 如冰网盘 - 轻量级网盘系统
+    <!-- FAVICON_PLACEHOLDER -->
+    <!-- CSS_PLACEHOLDER -->
+    <!-- FA_CSS_PLACEHOLDER -->
+    <!-- CUSTOM_HEAD_PLACEHOLDER -->
+  body
+    <!-- CUSTOM_BODY_PLACEHOLDER -->
+    #app(v-cloak :class="{ 'page-ready': pageReady }")
+      // Full-page Loading Overlay
+      .page-loader(v-if="initialLoading")
+        .page-loader-bg
+        .page-loader-content
+          .page-loader-logo
+            i.fa-solid.fa-cloud
+          .page-loader-title {{ t.app?.title || '如冰网盘' }}
+          .page-loader-bar
+            .page-loader-bar-fill
+          .page-loader-text {{ t.status?.loading || '加载中...' }}
+
+      // Header Bar - full width, outside .app
+      header.header-bar
+        .header-bar-inner
+          .header-left
+            .header-logo
+              i.fa-solid.fa-cloud
+            .header-title-group
+              h1.header-title {{ t.app?.title || '如冰网盘' }}
+              span.header-subtitle {{ t.app?.subtitle || '轻量级网盘系统' }}
+          .header-right
+            .header-stat(v-if="!loading")
+              i.fa-solid.fa-file
+              span {{ fileCountText }}
+            .header-actions
+              button.header-btn(@click="toggleTheme" :title="t.theme?.toggle || '切换主题'")
+                i.fa-solid.fa-sun(v-if="currentTheme === 'light'")
+                i.fa-solid.fa-moon(v-else)
+              .lang-dropdown-wrapper
+                button.header-btn.lang-btn(@click="toggleLangDropdown" :title="t.lang?.label || '语言'")
+                  span.lang-label {{ langLabel }}
+                .lang-dropdown(v-if="langDropdownOpen")
+                  .lang-dropdown-item(:class="{ active: currentLang === 'zh-CN' }" @click="selectLanguage('zh-CN')")
+                    span.lang-name 简体中文
+                  .lang-dropdown-item(:class="{ active: currentLang === 'zh-TW' }" @click="selectLanguage('zh-TW')")
+                    span.lang-name 繁體中文
+                  .lang-dropdown-item(:class="{ active: currentLang === 'en' }" @click="selectLanguage('en')")
+                    span.lang-name English
+                  .lang-dropdown-item(:class="{ active: currentLang === 'ja' }" @click="selectLanguage('ja')")
+                    span.lang-name 日本語
+                  .lang-dropdown-item(:class="{ active: currentLang === 'ko' }" @click="selectLanguage('ko')")
+                    span.lang-name 한국어
+              button.header-btn(@click="settingsOpen = true" :title="t.settings?.label || '设置'")
+                i.fa-solid.fa-gear
+
+      .app
+
+        // Breadcrumb Navigation
+        nav.breadcrumb-nav
+          template(v-for="(item, index) in breadcrumbItems" :key="index")
+            span.breadcrumb-sep(v-if="index > 0")
+              i.fa-solid.fa-chevron-right
+            span.breadcrumb-item(:class="{ active: index === breadcrumbItems.length - 1 }" @click="navigateTo(item.path)") {{ item.name }}
+
+        // Toolbar
+        .toolbar
+          .toolbar-left
+            .search-box
+              i.fa-solid.fa-magnifying-glass.search-icon
+              input(type="text" v-model="searchQuery" :placeholder="t.toolbar?.search || '搜索文件...'" autocomplete="off")
+          .toolbar-right
+            .view-toggle
+              button.view-btn(:class="{ active: viewMode === 'list' }" @click="viewMode = 'list'" :title="t.toolbar?.listView || '列表视图'")
+                i.fa-solid.fa-list
+              button.view-btn(:class="{ active: viewMode === 'grid' }" @click="viewMode = 'grid'" :title="t.toolbar?.gridView || '网格视图'")
+                i.fa-solid.fa-grid-2
+            button.icon-btn(@click="loadManifest" :title="t.toolbar?.refresh || '刷新'")
+              i.fa-solid.fa-arrows-rotate
+
+        // Loading State
+        .loading(v-if="loading")
+          .spinner
+          p {{ t.status?.loading || '加载中...' }}
+
+        // Error State
+        .error(v-if="error && !loading")
+          .error-box
+            i.fa-solid.fa-circle-exclamation
+            h3 {{ t.status?.error || '加载失败' }}
+            p {{ errorMsg }}
+            button.btn(@click="loadManifest") {{ t.status?.retry || '重试' }}
+
+        // Announcement Modal
+        .announcement-modal(v-if="announcementVisible")
+          .announcement-overlay(@click="closeAnnouncement")
+          .announcement-dialog
+            button.close-btn(@click="closeAnnouncement")
+              i.fa-solid.fa-xmark
+            .announcement-body(v-html="announcementContent")
+            .announcement-footer
+              label.checkbox-label
+                input(type="checkbox" v-model="announcementDontShowAgain")
+                span {{ t.announcement?.dontShowAgain || '不再显示' }}
+              button.btn.btn-primary(@click="closeAnnouncement") {{ t.announcement?.close || '关闭' }}
+
+        // Notification Toast
+        .notification-toast(v-if="notificationVisible" :class="{ 'notification-leaving': notificationClosing }")
+          button.close-btn(@click="closeNotification")
+            i.fa-solid.fa-xmark
+          .notification-body(v-html="notificationContent")
+
+        // File Grid View
+        .file-grid(v-if="!loading && !error && filteredFiles.length > 0 && viewMode === 'grid'")
+          .file-card(v-for="file in filteredFiles" :key="file.path" :class="{ 'is-folder': file.type === 'folder' }" @click="file.type === 'folder' ? enterFolder(file) : null")
+            .card-icon(:class="getFileIcon(file)")
+              i.fa-solid.fa-folder(v-if="file.type === 'folder'")
+              i.fa-solid.fa-file-lines(v-else-if="getFileIcon(file) === 'file-md'")
+              i.fa-solid.fa-file-code(v-else-if="getFileIcon(file) === 'file-code'")
+              i.fa-solid.fa-file-image(v-else-if="getFileIcon(file) === 'file-img'")
+              i.fa-solid.fa-file-audio(v-else-if="getFileIcon(file) === 'file-audio'")
+              i.fa-solid.fa-file-video(v-else-if="getFileIcon(file) === 'file-video'")
+              i.fa-solid.fa-file-pdf(v-else-if="getFileIcon(file) === 'file-pdf'")
+              i.fa-solid.fa-file(v-else)
+            .card-name(:title="file.name") {{ file.name }}
+            .card-meta
+              span(v-if="file.type === 'file'") {{ formatSize(file.size) }}
+              span(v-if="file.type === 'file' && file.chunks > 1") · {{ getChunkInfo(file) }}
+              span(v-if="file.type === 'file' && file.lastModified") · {{ formatDate(file.lastModified) }}
+              span(v-if="file.type === 'folder'") {{ t.fileList?.folder || '文件夹' }}
+            .card-actions(v-if="file.type === 'file'")
+              button.btn.btn-sm(v-if="isPreviewable(file)" @click.stop="previewFile(file)") {{ t.preview?.btn || '预览' }}
+              button.btn.btn-sm(@click.stop="startDownload(file)") {{ t.download?.btn || '下载' }}
+
+        // File List View
+        .file-table(v-if="!loading && !error && filteredFiles.length > 0 && viewMode === 'list'")
+          .table-header
+            span.col-name {{ t.fileList?.headerName || '名称' }}
+            span.col-date {{ t.fileList?.headerDate || '日期' }}
+            span.col-size {{ t.fileList?.headerSize || '大小' }}
+            span.col-action {{ t.fileList?.headerAction || '操作' }}
+          .table-body
+            .table-row(v-for="file in filteredFiles" :key="file.path" :class="{ 'is-folder': file.type === 'folder' }" @click="file.type === 'folder' ? enterFolder(file) : null")
+              .cell-icon(:class="getFileIcon(file)")
+                i.fa-solid.fa-folder(v-if="file.type === 'folder'")
+                i.fa-solid.fa-file-lines(v-else-if="getFileIcon(file) === 'file-md'")
+                i.fa-solid.fa-file-code(v-else-if="getFileIcon(file) === 'file-code'")
+                i.fa-solid.fa-file-image(v-else-if="getFileIcon(file) === 'file-img'")
+                i.fa-solid.fa-file-audio(v-else-if="getFileIcon(file) === 'file-audio'")
+                i.fa-solid.fa-file-video(v-else-if="getFileIcon(file) === 'file-video'")
+                i.fa-solid.fa-file-pdf(v-else-if="getFileIcon(file) === 'file-pdf'")
+                i.fa-solid.fa-file(v-else)
+              .cell-name
+                span(:title="file.name") {{ file.name }}
+                span.file-chunks(v-if="file.type === 'file' && file.chunks > 1") {{ getChunkInfo(file) }}
+              .cell-date {{ file.lastModified ? formatDate(file.lastModified) : '' }}
+              .cell-size(v-if="file.type === 'file'") {{ formatSize(file.size) }}
+              .cell-size(v-else)
+              .cell-action
+                button.btn.btn-sm(v-if="file.type === 'file' && isPreviewable(file)" @click.stop="previewFile(file)") {{ t.preview?.btn || '预览' }}
+                button.btn.btn-sm(v-if="file.type === 'file'" @click.stop="startDownload(file)") {{ t.download?.btn || '下载' }}
+
+        // Empty State
+        .empty(v-if="!loading && !error && filteredFiles.length === 0")
+          i.fa-regular.fa-folder-open
+          p {{ t.status?.empty || '此文件夹为空' }}
+
+        // README Section
+        .readme-loading(v-if="readmeLoading")
+          .spinner.spinner-sm
+
+        .readme-section(v-if="!loading && !error && readmeContent && !readmeLoading")
+          .readme-box(v-html="readmeContent")
+
+        // Footer
+        footer.footer(v-if="!loading")
+          a.footer-link(:href="t.footer?.poweredLink || 'https://github.com/rubingchupin/rbpan'" target="_blank" rel="noopener")
+            | {{ t.footer?.powered || '由 如冰网盘 驱动' }}
+
+        // Download Modal
+        .modal-overlay(v-if="downloadModal" @click.self="cancelDownload")
+          .modal
+            h3 {{ t.download?.title || '正在下载' }}
+            p.modal-name {{ downloadFileName }}
+            .progress-bar
+              .progress-fill(:style="{ width: downloadProgress + '%' }")
+            p.progress-text {{ (t.download?.progress || '{p}%').replace('{p}', downloadProgress) }}
+            p.progress-speed(v-if="downloadSpeed") {{ (t.download?.speed || '{speed}').replace('{speed}', downloadSpeed) }}
+            p.progress-detail(v-if="downloadDetail") {{ downloadDetail }}
+            button.btn(v-if="downloadCancellable" @click="cancelDownload") {{ t.download?.cancel || '取消' }}
+            button.btn(v-else @click="downloadModal = false") {{ t.download?.close || '关闭' }}
+
+        // Preview Modal
+        .modal-overlay.preview-overlay(v-if="previewModal" @click.self="closePreview")
+          .preview-modal
+            .preview-header
+              h3 {{ previewFileName }}
+              button.icon-btn(@click="closePreview" :title="t.preview?.close || '关闭'")
+                i.fa-solid.fa-xmark
+            .preview-body
+              .preview-loading(v-if="previewLoading")
+                .spinner
+                p {{ t.preview?.loading || '加载中...' }}
+              .preview-content.markdown-body(v-else-if="previewType === 'markdown'" v-html="previewContent")
+              .preview-content.code-body(v-else-if="previewType === 'code'" v-html="previewContent")
+              .preview-content.text-body(v-else-if="previewType === 'text'" v-html="previewContent")
+              .preview-content.image-body(v-else-if="previewType === 'image'")
+                img(:src="previewRawUrl" :alt="previewFileName")
+              .preview-content.audio-body(v-else-if="previewType === 'audio'")
+                audio(:src="previewRawUrl" controls)
+              .preview-content.video-body(v-else-if="previewType === 'video'")
+                video(:src="previewRawUrl" controls)
+              .preview-content.pdf-body(v-else-if="previewType === 'pdf'")
+                embed(:src="previewRawUrl" type="application/pdf" width="100%" height="100%")
+              .preview-content.html-body(v-else-if="previewType === 'html'")
+                iframe(:srcdoc="previewContent" sandbox="allow-scripts allow-same-origin" width="100%" height="500px")
+              .preview-content.docx-body(v-else-if="previewType === 'docx'")
+                .docx-preview(ref="docxPreview" style="width:100%;height:100%;overflow:auto;")
+              .preview-content.xlsx-body(v-else-if="previewType === 'xlsx'")
+                .xlsx-preview(ref="xlsxPreview" style="width:100%;height:100%;overflow:auto;")
+              .preview-content.pptx-body(v-else-if="previewType === 'pptx'")
+                .pptx-preview(ref="pptxPreview" style="width:100%;height:100%;overflow:auto;")
+              .preview-content(v-else)
+                p {{ t.preview?.unsupported || '不支持预览此文件类型' }}
+
+        // Settings Overlay
+        .settings-overlay(:class="{ open: settingsOpen }" @click="settingsOpen = false")
+
+        // Settings Panel
+        .settings-panel(:class="{ open: settingsOpen }")
+          .settings-header
+            h3
+              i.fa-solid.fa-gear
+              | {{ t.settings?.label || '设置' }}
+            button.icon-btn(@click="settingsOpen = false")
+              i.fa-solid.fa-xmark
+          .settings-body
+            // Appearance Section
+            .settings-section
+              .settings-section-title {{ t.settings?.appearance || '外观' }}
+              .settings-item
+                .settings-item-label {{ t.settings?.theme || '主题模式' }}
+                .settings-item-desc {{ t.settings?.themeDesc || '切换浅色/深色主题' }}
+                .toggle-switch(:class="{ active: currentTheme === 'dark' }" @click="toggleTheme")
+                  .toggle-track
+                  .toggle-label {{ currentTheme === 'dark' ? (t.settings?.dark || '深色') : (t.settings?.light || '浅色') }}
+
+            // Layout Section
+            .settings-section
+              .settings-section-title {{ t.settings?.layout || '布局' }}
+              .settings-item
+                .settings-item-label {{ t.settings?.defaultView || '默认视图' }}
+                select.settings-select(v-model="viewMode")
+                  option(value="list") {{ t.toolbar?.listView || '列表视图' }}
+                  option(value="grid") {{ t.toolbar?.gridView || '网格视图' }}
+              .settings-item
+                .settings-item-label {{ t.settings?.showFolderImg || '显示文件夹为图片视图' }}
+                .toggle-switch(:class="{ active: showFolderImage }" @click="toggleShowFolderImage")
+                  .toggle-track
+                  .toggle-label {{ showFolderImage ? (t.settings?.enabled || '开启') : (t.settings?.disabled || '关闭') }}
+              .settings-item
+                .settings-item-label {{ t.settings?.showFileCount || '显示文件计数信息' }}
+                .toggle-switch(:class="{ active: showFileCount }" @click="toggleShowFileCount")
+                  .toggle-track
+                  .toggle-label {{ showFileCount ? (t.settings?.enabled || '开启') : (t.settings?.disabled || '关闭') }}
+              .settings-item
+                .settings-item-label {{ t.settings?.showGalleryThumb || '显示图库缩略图' }}
+                .toggle-switch(:class="{ active: showGalleryThumb }" @click="toggleShowGalleryThumb")
+                  .toggle-track
+                  .toggle-label {{ showGalleryThumb ? (t.settings?.enabled || '开启') : (t.settings?.disabled || '关闭') }}
+              .settings-item
+                .settings-item-label {{ t.settings?.lastImage || '记住最后浏览的图片' }}
+                .toggle-switch(:class="{ active: rememberLastImage }" @click="toggleRememberLastImage")
+                  .toggle-track
+                  .toggle-label {{ rememberLastImage ? (t.settings?.enabled || '开启') : (t.settings?.disabled || '关闭') }}
+
+    <!-- VUE_PLACEHOLDER -->
+    <!-- JS_PLACEHOLDER -->

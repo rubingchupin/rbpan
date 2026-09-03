@@ -1,0 +1,98 @@
+{
+  "app": {
+    "title": "rbpan",
+    "subtitle": "경량 클라우드 드라이브"
+  },
+  "breadcrumb": {
+    "root": "루트"
+  },
+  "toolbar": {
+    "search": "파일 검색...",
+    "refresh": "새로고침",
+    "listView": "목록 보기",
+    "gridView": "그리드 보기"
+  },
+  "status": {
+    "loading": "파일 목록을 불러오는 중...",
+    "error": "로드 실패",
+    "errorHint": "서버에 연결할 수 없습니다",
+    "manifestError": "데이터 소스에 연결할 수 없습니다. _config.js에서 localFallback을 설정하거나 manifestUrl을 확인하세요",
+    "retry": "재시도",
+    "empty": "이 폴더는 비어 있습니다"
+  },
+  "fileList": {
+    "folder": "폴더",
+    "headerName": "이름",
+    "headerDate": "날짜",
+    "headerSize": "크기",
+    "headerAction": "작업",
+    "chunks": "{n} 조각",
+    "chunkSize": "{size}/조각"
+  },
+  "date": {
+    "justNow": "방금 전",
+    "minutesAgo": "분 전",
+    "hoursAgo": "시간 전",
+    "daysAgo": "일 전"
+  },
+  "download": {
+    "btn": "다운로드",
+    "title": "다운로드 중",
+    "progress": "{p}%",
+    "speed": "{speed}",
+    "chunkProgress": "조각 {done}/{total}",
+    "complete": "다운로드 완료, 저장 중...",
+    "failed": "다운로드 실패",
+    "cancel": "취소",
+    "close": "닫기",
+    "verifying": "파일 무결성 검증 중...",
+    "verifyOk": "SHA-256 검증 완료",
+    "verifyFail": "SHA-256 검증 실패! 파일이 손상되었을 수 있습니다"
+  },
+  "lang": {
+    "switch": "中文",
+    "label": "언어"
+  },
+  "theme": {
+    "toggle": "테마 전환"
+  },
+  "footer": {
+    "powered": "Powered by rbpan",
+    "poweredLink": "https://github.com/rubingchupin/rbpan"
+  },
+  "preview": {
+    "btn": "미리보기",
+    "close": "닫기",
+    "loading": "로딩 중...",
+    "loadError": "파일을 불러오지 못했습니다",
+    "unsupported": "이 파일 형식은 미리보기를 지원하지 않습니다"
+  },
+  "settings": {
+    "label": "설정",
+    "appearance": "외관",
+    "theme": "테마 모드",
+    "themeDesc": "라이트/다크 테마 전환",
+    "light": "라이트",
+    "dark": "다크",
+    "layout": "레이아웃",
+    "defaultView": "기본 보기",
+    "showFolderImg": "폴더를 이미지로 표시",
+    "showFileCount": "파일 개수 표시",
+    "showGalleryThumb": "갤러리 썸네일 표시",
+    "lastImage": "마지막으로 본 이미지 기억",
+    "enabled": "켜짐",
+    "disabled": "꺼짐",
+    "background": "배경 이미지",
+    "noBg": "배경 이미지 없음",
+    "uploadBg": "배경 업로드",
+    "bgOpacity": "배경 투명도",
+    "clearBg": "배경 제거",
+    "invalidImage": "이미지 파일을 선택해주세요",
+    "color": "테마 색상",
+    "accentColor": "강조 색상"
+  },
+  "announcement": {
+    "dontShowAgain": "다시 보지 않기",
+    "close": "닫기"
+  }
+}

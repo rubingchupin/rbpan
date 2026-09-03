@@ -1,0 +1,98 @@
+{
+  "app": {
+    "title": "如冰网盘",
+    "subtitle": "轻量级网盘系统"
+  },
+  "breadcrumb": {
+    "root": "根目录"
+  },
+  "toolbar": {
+    "search": "搜索文件...",
+    "refresh": "刷新",
+    "listView": "列表视图",
+    "gridView": "网格视图"
+  },
+  "status": {
+    "loading": "正在加载文件列表...",
+    "error": "加载失败",
+    "errorHint": "无法连接到服务器",
+    "manifestError": "无法连接数据源，请在 _config.js 中设置 localFallback 或检查 manifestUrl",
+    "retry": "重试",
+    "empty": "此文件夹为空"
+  },
+  "fileList": {
+    "folder": "文件夹",
+    "headerName": "名称",
+    "headerDate": "日期",
+    "headerSize": "大小",
+    "headerAction": "操作",
+    "chunks": "{n} 个分片",
+    "chunkSize": "{size}/片"
+  },
+  "date": {
+    "justNow": "刚刚",
+    "minutesAgo": "分钟前",
+    "hoursAgo": "小时前",
+    "daysAgo": "天前"
+  },
+  "download": {
+    "btn": "下载",
+    "title": "正在下载",
+    "progress": "{p}%",
+    "speed": "{speed}",
+    "chunkProgress": "分片 {done}/{total}",
+    "complete": "下载完成，正在保存...",
+    "failed": "下载失败",
+    "cancel": "取消",
+    "close": "关闭",
+    "verifying": "正在校验文件完整性...",
+    "verifyOk": "SHA-256 校验通过",
+    "verifyFail": "SHA-256 校验失败！文件可能已损坏"
+  },
+  "lang": {
+    "switch": "English",
+    "label": "语言"
+  },
+  "theme": {
+    "toggle": "切换主题"
+  },
+  "footer": {
+    "powered": "由 如冰网盘 驱动",
+    "poweredLink": "https://github.com/rubingchupin/rbpan"
+  },
+  "preview": {
+    "btn": "预览",
+    "close": "关闭",
+    "loading": "加载中...",
+    "loadError": "文件加载失败",
+    "unsupported": "不支持预览此文件类型"
+  },
+  "settings": {
+    "label": "设置",
+    "appearance": "外观",
+    "theme": "主题模式",
+    "themeDesc": "切换浅色/深色主题",
+    "light": "浅色",
+    "dark": "深色",
+    "layout": "布局",
+    "defaultView": "默认视图",
+    "showFolderImg": "显示文件夹为图片视图",
+    "showFileCount": "显示文件计数信息",
+    "showGalleryThumb": "显示图库缩略图",
+    "lastImage": "记住最后浏览的图片",
+    "enabled": "开启",
+    "disabled": "关闭",
+    "background": "背景图片",
+    "noBg": "暂无背景图片",
+    "uploadBg": "上传背景图",
+    "bgOpacity": "背景透明度",
+    "clearBg": "清除背景",
+    "invalidImage": "请选择图片文件",
+    "color": "主题色",
+    "accentColor": "强调色"
+  },
+  "announcement": {
+    "dontShowAgain": "不再显示",
+    "close": "关闭"
+  }
+}

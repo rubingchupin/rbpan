@@ -1,0 +1,1928 @@
+*
+  margin 0
+  padding 0
+  box-sizing border-box
+
+[v-cloak]
+  display none !important
+
+html
+  -webkit-font-smoothing antialiased
+  -moz-osx-font-smoothing grayscale
+  scroll-behavior smooth
+
+body
+  font-family -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif
+  background var(--bg)
+  color var(--text)
+  min-height 100vh
+  line-height 1.6
+  transition background 0.4s ease, color 0.4s ease
+
+html[lang="zh-TW"] body
+  font-family -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Serif TC', 'Source Han Serif TC', 'PMingLiU', 'Microsoft JhengHei', 'PingFang TC', sans-serif
+  overflow-x hidden
+
+body::before
+  content ''
+  position fixed
+  top 0
+  left 0
+  right 0
+  bottom 0
+  background radial-gradient(ellipse at 10% 20%, var(--accent-soft) 0%, transparent 50%), radial-gradient(ellipse at 90% 80%, rgba(255, 119, 198, 0.04) 0%, transparent 50%), radial-gradient(ellipse at 50% 50%, rgba(120, 219, 255, 0.03) 0%, transparent 60%)
+  pointer-events none
+  z-index -1
+  transition opacity 0.4s ease
+
+#app
+  position relative
+  min-height 100vh
+
+@keyframes scaleIn
+  from
+    opacity 0
+    transform scale(0.92)
+  to
+    opacity 1
+    transform scale(1)
+
+@keyframes slideUp
+  from
+    opacity 0
+    transform translateY(20px)
+  to
+    opacity 1
+    transform translateY(0)
+
+@keyframes slideInRight
+  from
+    opacity 0
+    transform translateX(100%) scale(0.95)
+  to
+    opacity 1
+    transform translateX(0) scale(1)
+
+@keyframes slideOutRight
+  from
+    opacity 1
+    transform translateX(0) scale(1)
+  to
+    opacity 0
+    transform translateX(100%) scale(0.95)
+
+@keyframes spin
+  to
+    transform rotate(360deg)
+
+@keyframes shimmer
+  0%
+    background-position -200% 0
+  100%
+    background-position 200% 0
+
+@keyframes pulse
+  0%, 100%
+    opacity 1
+  50%
+    opacity 0.6
+
+@keyframes fadeIn
+  from
+    opacity 0
+  to
+    opacity 1
+
+@keyframes fadeInUp
+  from
+    opacity 0
+    transform translateY(24px)
+  to
+    opacity 1
+    transform translateY(0)
+
+@keyframes fadeInDown
+  from
+    opacity 0
+    transform translateY(-16px)
+  to
+    opacity 1
+    transform translateY(0)
+
+@keyframes fadeInScale
+  from
+    opacity 0
+    transform scale(0.92)
+  to
+    opacity 1
+    transform scale(1)
+
+@keyframes loaderBarPulse
+  0%
+    left -40%
+    width 40%
+  50%
+    left 50%
+    width 30%
+  100%
+    left 110%
+    width 40%
+
+/* ---- FULL-PAGE LOADER ---- */
+.page-loader
+  position fixed
+  inset 0
+  z-index 10001
+  display flex
+  align-items center
+  justify-content center
+  background var(--loader-bg)
+
+.page-loader-bg
+  position absolute
+  inset 0
+  background var(--loader-bg)
+
+.page-loader-content
+  position relative
+  display flex
+  flex-direction column
+  align-items center
+  gap 20px
+  animation fadeInScale 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)
+
+.page-loader-logo
+  width 72px
+  height 72px
+  background var(--loader-logo-bg)
+  border-radius 20px
+  display flex
+  align-items center
+  justify-content center
+  backdrop-filter blur(4px)
+  box-shadow 0 8px 32px rgba(0,0,0,0.15)
+  i
+    font-size 36px
+    color var(--loader-logo-color)
+
+.page-loader-title
+  font-size 22px
+  font-weight 700
+  color var(--loader-title-color)
+  letter-spacing 0.5px
+
+.page-loader-bar
+  width 200px
+  height 4px
+  background var(--loader-bar-bg)
+  border-radius 2px
+  overflow hidden
+  position relative
+
+.page-loader-bar-fill
+  position absolute
+  top 0
+  height 100%
+  background var(--loader-bar-fill)
+  border-radius 2px
+  animation loaderBarPulse 1.6s ease-in-out infinite
+
+.page-loader-text
+  font-size 13px
+  color var(--loader-text-color)
+  letter-spacing 1px
+  text-transform uppercase
+
+/* ---- PAGE ENTRANCE ANIMATIONS ---- */
+#app.page-ready
+  .header-bar
+    animation fadeInDown 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both
+
+  .breadcrumb-nav
+    animation fadeInUp 0.5s 0.1s cubic-bezier(0.22, 1, 0.36, 1) both
+
+  .toolbar
+    animation fadeInUp 0.5s 0.15s cubic-bezier(0.22, 1, 0.36, 1) both
+
+  .file-grid .file-card
+    animation fadeInScale 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both
+    for i in (1..30)
+      &:nth-child({i})
+        animation-delay 0.08s * i + 0.2s
+
+  .file-list
+    animation fadeInUp 0.5s 0.2s cubic-bezier(0.22, 1, 0.36, 1) both
+
+  .readme-section
+    animation fadeInUp 0.5s 0.25s cubic-bezier(0.22, 1, 0.36, 1) both
+
+  .footer
+    animation fadeInUp 0.5s 0.3s cubic-bezier(0.22, 1, 0.36, 1) both
+
+  .empty
+    animation fadeInScale 0.5s 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) both
+
+.page-loader
+  &.v-enter-active
+    transition opacity 0.5s ease
+  &.v-leave-active
+    transition opacity 0.5s ease
+  &.v-enter-from,
+  &.v-leave-to
+    opacity 0
+
+.app
+  max-width 1280px
+  margin 0 auto
+  padding 0 32px 60px
+
+/* ---- HEADER BAR ---- */
+.header-bar
+  width 100%
+  background var(--bar-bg)
+  backdrop-filter blur(var(--bar-blur))
+  -webkit-backdrop-filter blur(var(--bar-blur))
+  position relative
+  overflow visible
+  border-bottom var(--bar-border)
+  z-index 100
+
+.header-bar-inner
+  max-width 1280px
+  margin 0 auto
+  padding 18px 32px
+  display flex
+  align-items center
+  justify-content space-between
+  gap 16px
+
+.header-left
+  display flex
+  align-items center
+  gap 14px
+  min-width 0
+
+.header-logo
+  display flex
+  align-items center
+  justify-content center
+  width 44px
+  height 44px
+  border-radius var(--radius-sm)
+  background var(--bar-item-bg)
+  backdrop-filter blur(10px)
+  -webkit-backdrop-filter blur(10px)
+  border 1px solid var(--bar-item-border)
+  color var(--bar-text)
+  flex-shrink 0
+  box-shadow var(--shadow-sm)
+  i
+    font-size 22px
+
+.header-title-group
+  display flex
+  align-items baseline
+  gap 10px
+  min-width 0
+
+.header-title
+  font-size 20px
+  font-weight 700
+  color var(--bar-text)
+  line-height 1.3
+  letter-spacing -0.01em
+  white-space nowrap
+  margin 0
+
+.header-subtitle
+  font-size 13px
+  color var(--bar-text-sub)
+  font-weight 400
+  white-space nowrap
+
+.header-right
+  display flex
+  align-items center
+  gap 12px
+  flex-shrink 0
+
+.header-stat
+  display flex
+  align-items center
+  gap 6px
+  padding 7px 14px
+  background var(--bar-item-bg)
+  backdrop-filter blur(10px)
+  -webkit-backdrop-filter blur(10px)
+  border 1px solid var(--bar-item-border)
+  border-radius var(--radius-sm)
+  color var(--bar-text)
+  font-size 13px
+  font-weight 500
+  white-space nowrap
+  i
+    font-size 13px
+    opacity 0.8
+
+.header-actions
+  display flex
+  gap 8px
+
+.header-btn
+  display flex
+  align-items center
+  justify-content center
+  width 38px
+  height 38px
+  border-radius var(--radius-sm)
+  background var(--bar-item-bg)
+  backdrop-filter blur(10px)
+  -webkit-backdrop-filter blur(10px)
+  border 1px solid var(--bar-item-border)
+  color var(--bar-text)
+  cursor pointer
+  transition all 0.3s cubic-bezier(0.22, 1, 0.36, 1)
+  flex-shrink 0
+  i
+    font-size 16px
+  &:hover
+    background var(--bar-item-hover)
+    transform scale(1.08) translateY(-1px)
+    box-shadow var(--shadow-md)
+  &:active
+    transform scale(0.95)
+
+/* ---- LANGUAGE DROPDOWN ---- */
+.lang-btn
+  width var(--lang-btn-size, 38px) !important
+  height var(--lang-btn-size, 38px) !important
+  padding 0 !important
+  min-width unset !important
+  aspect-ratio 1 / 1 !important
+  display flex !important
+  align-items center !important
+  justify-content center !important
+
+.lang-dropdown-wrapper
+  position relative
+  z-index 10010
+
+  .lang-label
+    display flex
+    align-items center
+    justify-content center
+    font-size var(--lang-btn-font-size, 14px)
+    font-weight var(--lang-btn-font-weight, 400)
+    letter-spacing 0.5px
+    line-height 1
+    white-space nowrap
+
+.lang-dropdown
+  position absolute
+  top calc(100% + 8px)
+  right 0
+  min-width var(--lang-dropdown-min-width, 180px)
+  background rgba(255,255,255,0.85)
+  backdrop-filter blur(40px) saturate(180%)
+  -webkit-backdrop-filter blur(40px) saturate(180%)
+  border 1px solid rgba(200,205,220,0.5)
+  border-radius 12px
+  box-shadow 0 8px 32px rgba(0,0,0,0.12)
+  overflow hidden
+  z-index 10010
+  animation dropdownIn 0.25s cubic-bezier(0.22, 1, 0.36, 1)
+
+[data-theme="dark"] .lang-dropdown
+  background rgba(30,41,59,0.85)
+  border 1px solid rgba(71,85,105,0.5)
+
+.lang-dropdown-item
+  display flex
+  align-items center
+  gap 10px
+  padding var(--lang-item-padding, 11px 16px)
+  cursor pointer
+  transition all 0.2s ease
+  font-size 14px
+  color var(--text)
+  white-space nowrap
+  &:hover
+    background var(--surface-hover)
+  &.active
+    background var(--accent-bg)
+    color var(--accent)
+    font-weight 600
+  &:first-child
+    border-radius 12px 12px 0 0
+  &:last-child
+    border-radius 0 0 12px 12px
+
+.lang-name
+  flex 1
+  white-space nowrap
+  overflow hidden
+  text-overflow ellipsis
+
+@keyframes dropdownIn
+  from
+    opacity 0
+    transform translateY(-8px) scale(0.96)
+  to
+    opacity 1
+    transform translateY(0) scale(1)
+
+/* ---- BREADCRUMB NAV ---- */
+.breadcrumb-nav
+  display flex
+  align-items center
+  gap 4px
+  margin 24px 0 20px
+  padding 12px 20px
+  background var(--surface)
+  backdrop-filter blur(var(--glass-blur))
+  -webkit-backdrop-filter blur(var(--glass-blur))
+  border 1px solid var(--border)
+  border-radius var(--radius)
+  box-shadow var(--shadow-sm)
+  font-size 13px
+  flex-wrap wrap
+
+.breadcrumb-sep
+  color var(--text-muted)
+  user-select none
+  margin 0 2px
+  font-size 11px
+
+.breadcrumb-item
+  color var(--text-secondary)
+  cursor pointer
+  padding 4px 10px
+  border-radius var(--radius-sm)
+  transition all 0.3s cubic-bezier(0.22, 1, 0.36, 1)
+  white-space nowrap
+  font-weight 500
+  &:hover
+    color var(--accent)
+    background var(--accent-soft)
+    transform translateY(-1px)
+  &.active
+    color var(--text)
+    font-weight 600
+    cursor default
+    background var(--surface-weak)
+    &:hover
+      background var(--surface-weak)
+
+/* ---- TOOLBAR ---- */
+.toolbar
+  display flex
+  align-items center
+  justify-content space-between
+  gap 16px
+  margin-bottom 24px
+  padding 14px 20px
+  background var(--surface)
+  backdrop-filter blur(var(--glass-blur))
+  -webkit-backdrop-filter blur(var(--glass-blur))
+  border 1px solid var(--border)
+  border-radius var(--radius)
+  flex-wrap wrap
+  box-shadow var(--shadow-sm)
+  transition all 0.3s ease
+
+.toolbar-left
+  display flex
+  align-items center
+  gap 12px
+
+.toolbar-right
+  display flex
+  align-items center
+  gap 10px
+  flex-shrink 0
+
+.search-box
+  display flex
+  align-items center
+  gap 10px
+  background var(--surface-weak)
+  border 1px solid var(--border)
+  border-radius 24px
+  padding 0 16px
+  transition all 0.3s cubic-bezier(0.22, 1, 0.36, 1)
+  min-width 240px
+  &:focus-within
+    border-color var(--accent)
+    background var(--surface)
+    box-shadow 0 0 0 4px var(--accent-soft), 0 4px 16px rgba(99, 102, 241, 0.12)
+    transform scale(1.02)
+  input
+    border none
+    outline none
+    background transparent
+    color var(--text)
+    font-size 13px
+    padding 10px 0
+    width 200px
+    transition all 0.3s cubic-bezier(0.22, 1, 0.36, 1)
+    &::placeholder
+      color var(--text-muted)
+
+.search-icon
+  color var(--text-muted)
+  flex-shrink 0
+  font-size 14px
+
+/* ---- TOGGLE SWITCH ---- */
+.toggle-switch
+  display flex
+  align-items center
+  gap 10px
+  cursor pointer
+  user-select none
+
+.toggle-track
+  position relative
+  width 44px
+  height 24px
+  background var(--surface-weak)
+  border 1px solid var(--border)
+  border-radius 12px
+  transition all 0.3s cubic-bezier(0.22, 1, 0.36, 1)
+  flex-shrink 0
+  &::after
+    content ''
+    position absolute
+    top 2px
+    left 2px
+    width 18px
+    height 18px
+    background #fff
+    border-radius 50%
+    box-shadow 0 2px 4px rgba(0,0,0,0.15)
+    transition all 0.3s cubic-bezier(0.22, 1, 0.36, 1)
+
+.toggle-switch.active .toggle-track
+  background var(--accent)
+  border-color var(--accent)
+  &::after
+    transform translateX(20px)
+
+.toggle-label
+  font-size 13px
+  color var(--text-secondary)
+  font-weight 500
+  transition color 0.3s ease
+
+.toggle-switch:hover .toggle-label
+  color var(--text)
+
+.toggle-switch:hover .toggle-track
+  border-color var(--border-strong)
+
+/* ---- VIEW MODE TOGGLE ---- */
+.view-toggle
+  display flex
+  align-items center
+  background var(--surface-weak)
+  border 1px solid var(--border)
+  border-radius 10px
+  overflow hidden
+
+.view-btn
+  display flex
+  align-items center
+  justify-content center
+  width 36px
+  height 36px
+  border none
+  background transparent
+  color var(--text-muted)
+  cursor pointer
+  transition all 0.3s cubic-bezier(0.22, 1, 0.36, 1)
+  i
+    font-size 14px
+  &:hover
+    color var(--text-secondary)
+    background var(--surface-hover)
+  &.active
+    color var(--accent)
+    background var(--accent-soft)
+
+/* ---- LOADING / ERROR / EMPTY ---- */
+.loading
+.error
+.empty
+  display flex
+  flex-direction column
+  align-items center
+  justify-content center
+  padding 100px 20px
+  color var(--text-secondary)
+  gap 20px
+  text-align center
+  animation fadeInScale 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)
+
+.empty
+  i
+    font-size 64px
+    opacity 0.4
+
+.spinner
+  width 36px
+  height 36px
+  border 3px solid var(--border)
+  border-top-color var(--accent)
+  border-radius 50%
+  animation spin 0.8s linear infinite
+
+.spinner-sm
+  width 24px
+  height 24px
+  border-width 2px
+
+.error-box
+  display flex
+  flex-direction column
+  align-items center
+  gap 16px
+  text-align center
+  color var(--text-secondary)
+  i
+    font-size 56px
+    opacity 0.5
+  h3
+    color var(--text)
+    font-size 18px
+    font-weight 600
+
+/* ---- FILE TABLE ---- */
+.file-table
+  border 1px solid var(--border)
+  border-radius var(--radius)
+  overflow hidden
+  background var(--surface)
+  backdrop-filter blur(var(--glass-blur))
+  -webkit-backdrop-filter blur(var(--glass-blur))
+  box-shadow var(--shadow-sm)
+  animation fadeInUp 0.4s ease-out
+
+.table-header
+  display flex
+  align-items center
+  padding 14px 24px
+  background var(--surface-weak)
+  border-bottom 1px solid var(--border)
+  font-size 12px
+  font-weight 600
+  color var(--text-muted)
+  text-transform uppercase
+  letter-spacing 0.5px
+
+.col-name
+  flex 1
+  min-width 0
+  padding-left 48px
+
+.col-date
+  width 150px
+  text-align right
+  flex-shrink 0
+  margin-right 16px
+
+.col-size
+  width 120px
+  text-align right
+  flex-shrink 0
+  margin-right 12px
+
+.col-action
+  width 150px
+  text-align center
+  flex-shrink 0
+
+.table-body .table-row
+  display flex
+  align-items center
+  padding 14px 24px
+  border-bottom 1px solid var(--border)
+  transition all 0.3s cubic-bezier(0.22, 1, 0.36, 1)
+  cursor default
+  animation fadeInUp 0.3s ease-out
+  &:last-child
+    border-bottom none
+  &:hover
+    background var(--file-hover)
+    transform translateX(4px)
+    box-shadow var(--shadow-sm)
+  &.is-folder
+    cursor pointer
+    &:hover
+      background var(--folder-hover)
+      .cell-icon
+        transform scale(1.1)
+
+.cell-icon
+  width 44px
+  display flex
+  align-items center
+  justify-content center
+  flex-shrink 0
+  color var(--text-secondary)
+  transition transform 0.3s cubic-bezier(0.22, 1, 0.36, 1)
+  &.folder
+    color var(--folder)
+  &.file-md
+    color var(--accent)
+  &.file-code
+    color var(--accent)
+  &.file-img
+    color var(--accent)
+  i
+    font-size 20px
+
+.cell-name
+  flex 1
+  min-width 0
+  display flex
+  align-items center
+  gap 10px
+  font-size 14px
+  color var(--text)
+  overflow hidden
+  font-weight 500
+  span
+    overflow hidden
+    text-overflow ellipsis
+    white-space nowrap
+
+.file-chunks
+  font-size 11px
+  color var(--text-muted)
+  flex-shrink 0
+  padding 2px 8px
+  background var(--surface-weak)
+  border-radius 10px
+
+.cell-date
+  width 150px
+  text-align right
+  font-size 13px
+  color var(--text-secondary)
+  flex-shrink 0
+  margin-right 16px
+
+.cell-size
+  width 120px
+  text-align right
+  font-size 13px
+  color var(--text-secondary)
+  flex-shrink 0
+  margin-right 12px
+
+.cell-action
+  width 150px
+  display flex
+  justify-content center
+  gap 8px
+
+/* ---- FILE GRID ---- */
+.file-grid
+  display grid
+  grid-template-columns repeat(auto-fill, minmax(170px, 1fr))
+  gap 16px
+  animation fadeInUp 0.4s ease-out
+
+.file-card
+  display flex
+  flex-direction column
+  align-items center
+  padding 28px 18px 20px
+  background var(--surface)
+  backdrop-filter blur(var(--glass-blur))
+  -webkit-backdrop-filter blur(var(--glass-blur))
+  border 1px solid var(--border)
+  border-radius var(--radius)
+  transition all 0.4s cubic-bezier(0.22, 1, 0.36, 1)
+  cursor default
+  text-align center
+  gap 14px
+  animation fadeInUp 0.3s ease-out
+  &:hover
+    border-color var(--border-strong)
+    box-shadow var(--shadow-md)
+    transform translateY(-4px)
+  &.is-folder
+    cursor pointer
+    &:hover
+      border-color var(--folder)
+      box-shadow 0 8px 24px rgba(245,158,11,0.15)
+      .card-icon
+        background var(--folder-hover-bg)
+        transform scale(1.08)
+
+.card-icon
+  display flex
+  align-items center
+  justify-content center
+  width 60px
+  height 60px
+  border-radius var(--radius-sm)
+  background var(--file-bg)
+  color var(--text-secondary)
+  transition all 0.4s cubic-bezier(0.22, 1, 0.36, 1)
+  &.folder
+    background var(--folder-bg)
+    color var(--folder)
+  &.file-md
+    background var(--accent-soft)
+    color var(--accent)
+  &.file-code
+    background var(--accent-soft)
+    color var(--accent)
+  &.file-img
+    background var(--accent-soft)
+    color var(--accent)
+  &.file-audio
+    background var(--accent-soft)
+    color var(--accent)
+  &.file-video
+    background var(--accent-soft)
+    color var(--accent)
+  &.file-pdf
+    background var(--accent-soft)
+    color var(--accent)
+  i
+    font-size 28px
+
+.card-name
+  font-size 13px
+  color var(--text)
+  word-break break-all
+  display -webkit-box
+  -webkit-line-clamp 2
+  -webkit-box-orient vertical
+  overflow hidden
+  line-height 1.4
+  width 100%
+  font-weight 500
+
+.card-meta
+  font-size 11px
+  color var(--text-muted)
+  overflow hidden
+  text-overflow ellipsis
+  white-space nowrap
+  width 100%
+  text-align center
+
+.card-actions
+  display flex
+  gap 6px
+  margin-top 4px
+  opacity 0
+  transition opacity 0.3s ease
+
+.file-card:hover .card-actions
+  opacity 1
+
+/* ---- README SECTION ---- */
+.readme-section
+  margin 28px 0
+
+.readme-box
+  background var(--surface)
+  backdrop-filter blur(var(--glass-blur))
+  -webkit-backdrop-filter blur(var(--glass-blur))
+  border 1px solid var(--border)
+  border-radius var(--radius)
+  padding 28px 32px
+  line-height 1.8
+  color var(--text)
+  font-size 14px
+  overflow hidden
+  box-shadow var(--shadow-sm)
+  animation fadeInUp 0.4s ease-out
+  h1
+    font-size 24px
+    font-weight 700
+    margin 0 0 16px
+    padding-bottom 12px
+    border-bottom 1px solid var(--border)
+    color var(--text)
+  h2
+    font-size 20px
+    font-weight 600
+    margin 24px 0 12px
+    color var(--text)
+  h3
+    font-size 16px
+    font-weight 600
+    margin 20px 0 10px
+    color var(--text)
+  h4
+  h5
+  h6
+    font-size 14px
+    font-weight 600
+    margin 16px 0 8px
+    color var(--text)
+  p
+    margin 0 0 12px
+    &:last-child
+      margin-bottom 0
+  ul
+  ol
+    margin 8px 0 12px
+    padding-left 24px
+  li
+    margin 6px 0
+  a
+    color var(--accent)
+    text-decoration none
+    &:hover
+      text-decoration underline
+  strong
+    font-weight 600
+  em
+    font-style italic
+  code
+    background var(--surface-weak)
+    padding 3px 8px
+    border-radius 4px
+    font-size 13px
+    font-family 'SFMono-Regular', 'Fira Code', 'Fira Mono', 'Consolas', 'Monaco', 'Courier New', monospace
+    color var(--text)
+  pre
+    background var(--surface-weak)
+    border 1px solid var(--border)
+    border-radius 8px
+    padding 16px
+    margin 12px 0
+    overflow-x auto
+    code
+      background none
+      padding 0
+      border-radius 0
+      font-size 13px
+      line-height 1.6
+      color var(--text)
+  blockquote
+    border-left 4px solid var(--accent)
+    padding 12px 18px
+    margin 12px 0
+    background var(--accent-soft)
+    border-radius 0 8px 8px 0
+    color var(--text-secondary)
+    p
+      margin 0
+  hr
+    border none
+    border-top 1px solid var(--border)
+    margin 20px 0
+  img
+    max-width 100%
+    border-radius 8px
+    margin 12px 0
+    box-shadow var(--shadow-sm)
+
+.readme-loading
+  display flex
+  justify-content center
+  padding 20px 0
+
+/* ---- BUTTONS ---- */
+.btn
+  display inline-flex
+  align-items center
+  gap 6px
+  padding 8px 18px
+  border 1px solid var(--border)
+  border-radius var(--radius-sm)
+  background var(--surface)
+  color var(--text)
+  font-size 13px
+  font-weight 500
+  cursor pointer
+  transition all 0.3s cubic-bezier(0.22, 1, 0.36, 1)
+  text-decoration none
+  white-space nowrap
+  &:hover
+    background var(--accent)
+    border-color var(--accent)
+    color #fff
+    box-shadow 0 4px 12px var(--accent-glow)
+    transform translateY(-2px)
+  &:active
+    transform scale(0.96)
+
+.btn-sm
+  padding 6px 14px
+  font-size 12px
+
+.btn-primary
+  background var(--accent)
+  border-color var(--accent)
+  color #fff
+  &:hover
+    background var(--accent-hover)
+    border-color var(--accent-hover)
+    box-shadow 0 4px 16px var(--accent-glow)
+
+/* ---- ICON BUTTON ---- */
+.icon-btn
+  display flex
+  align-items center
+  justify-content center
+  width 40px
+  height 40px
+  border 1px solid var(--border)
+  border-radius var(--radius-sm)
+  background var(--surface)
+  color var(--text-secondary)
+  cursor pointer
+  transition all 0.3s cubic-bezier(0.22, 1, 0.36, 1)
+  flex-shrink 0
+  i
+    font-size 16px
+  &:hover
+    color var(--text)
+    border-color var(--border-strong)
+    background var(--surface-hover)
+    box-shadow var(--shadow-sm)
+    transform scale(1.05)
+  &:active
+    transform scale(0.92)
+
+/* ---- FOOTER ---- */
+.footer
+  margin-top 60px
+  padding 24px 0
+  text-align center
+  border-top 1px solid var(--border)
+  font-size 12px
+  letter-spacing 0.02em
+
+.footer-link
+  color var(--text-muted)
+  text-decoration none
+  transition all 0.3s ease
+  padding 6px 16px
+  border-radius 8px
+  &:hover
+    color var(--accent)
+    background var(--accent-soft)
+    text-decoration none
+
+/* ---- MODAL ---- */
+.modal-overlay
+  position fixed
+  inset 0
+  background rgba(0,0,0,0.5)
+  backdrop-filter blur(12px)
+  -webkit-backdrop-filter blur(12px)
+  display flex
+  align-items center
+  justify-content center
+  z-index 1000
+  animation fadeIn 0.2s ease
+
+.modal
+  background var(--surface-strong)
+  backdrop-filter blur(var(--glass-blur))
+  -webkit-backdrop-filter blur(var(--glass-blur))
+  border 1px solid var(--border)
+  border-radius var(--radius-lg)
+  padding 36px
+  width 400px
+  max-width 90vw
+  text-align center
+  box-shadow var(--shadow-lg)
+  animation scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)
+  h3
+    font-size 18px
+    margin-bottom 10px
+    color var(--text)
+    font-weight 600
+
+.modal-name
+  font-size 14px
+  color var(--text-secondary)
+  margin-bottom 20px
+  word-break break-all
+
+.progress-bar
+  height 8px
+  background var(--progress-bg)
+  border-radius 4px
+  overflow hidden
+  margin-bottom 12px
+  position relative
+  &::after
+    content ''
+    position absolute
+    top 0
+    left 0
+    right 0
+    bottom 0
+    background linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)
+    background-size 200% 100%
+    animation shimmer 1.5s infinite
+
+.progress-fill
+  height 100%
+  background linear-gradient(90deg, var(--accent), var(--accent-via))
+  border-radius 4px
+  transition width 0.3s ease
+
+.progress-text
+  font-size 15px
+  font-weight 600
+  color var(--text)
+  margin-bottom 6px
+
+.progress-speed
+.progress-detail
+  font-size 12px
+  color var(--text-muted)
+
+/* ---- ANNOUNCEMENT MODAL ---- */
+.announcement-modal
+  position fixed
+  top 0
+  left 0
+  right 0
+  bottom 0
+  z-index 9999
+  display flex
+  align-items center
+  justify-content center
+  animation fadeIn 0.2s ease-out
+
+.announcement-overlay
+  position absolute
+  top 0
+  left 0
+  right 0
+  bottom 0
+  background rgba(0, 0, 0, 0.5)
+  backdrop-filter blur(12px)
+  -webkit-backdrop-filter blur(12px)
+
+.announcement-dialog
+  position relative
+  max-width 680px
+  max-height 80vh
+  width 90%
+  background var(--surface-strong)
+  backdrop-filter blur(var(--glass-blur))
+  -webkit-backdrop-filter blur(var(--glass-blur))
+  border-radius var(--radius-xl)
+  box-shadow var(--shadow-lg)
+  overflow hidden
+  animation scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)
+  border 1px solid var(--border)
+
+.announcement-body
+  padding 40px 48px 24px 48px
+  max-height calc(80vh - 140px)
+  overflow-y auto
+  font-size 15px
+  line-height 1.8
+  color var(--text)
+  h1, h2, h3
+    margin 0 0 18px 0
+    font-size 24px
+    font-weight 700
+    color var(--accent)
+  h1
+    font-size 30px
+  h2
+    font-size 26px
+  p
+    margin 0 0 14px 0
+  a
+    color var(--accent)
+    text-decoration underline
+  ul, ol
+    margin 14px 0
+    padding-left 24px
+  code
+    background var(--surface-weak)
+    padding 3px 8px
+    border-radius 4px
+    font-size 13px
+  pre
+    background var(--surface-weak)
+    padding 18px
+    border-radius 10px
+    overflow-x auto
+    code
+      background none
+      padding 0
+
+.announcement-footer
+  display flex
+  align-items center
+  justify-content space-between
+  padding 18px 48px
+  border-top 1px solid var(--border)
+  background var(--surface-weak)
+
+.checkbox-label
+  display flex
+  align-items center
+  gap 10px
+  cursor pointer
+  font-size 14px
+  color var(--text-secondary)
+  input[type="checkbox"]
+    width 18px
+    height 18px
+    cursor pointer
+    accent-color var(--accent)
+    border-radius 4px
+
+/* ---- NOTIFICATION TOAST ---- */
+.notification-toast
+  position fixed
+  top 28px
+  right 28px
+  max-width 400px
+  width calc(100% - 56px)
+  background var(--surface-strong)
+  backdrop-filter blur(var(--glass-blur))
+  -webkit-backdrop-filter blur(var(--glass-blur))
+  border 1px solid var(--border)
+  border-left 4px solid var(--accent)
+  border-radius var(--radius)
+  box-shadow var(--shadow-lg)
+  padding 22px 52px 22px 22px
+  z-index 9998
+  animation slideInRight 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)
+  transition transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1)
+
+  &.notification-leaving
+    transform translateX(120%)
+    opacity 0
+
+.notification-body
+  font-size 14px
+  line-height 1.7
+  color var(--text-secondary)
+  p
+    margin 0
+  a
+    color var(--accent)
+    text-decoration underline
+
+.close-btn
+  position absolute
+  top 14px
+  right 14px
+  width 34px
+  height 34px
+  display flex
+  align-items center
+  justify-content center
+  background transparent
+  border none
+  color var(--text-muted)
+  cursor pointer
+  border-radius 50%
+  transition all 0.3s ease
+  i
+    font-size 16px
+  &:hover
+    background var(--file-hover)
+    color var(--text)
+
+/* ---- PREVIEW MODAL ---- */
+.preview-overlay
+  align-items flex-start
+  padding 48px 24px
+
+.preview-modal
+  background var(--surface-strong)
+  backdrop-filter blur(var(--glass-blur))
+  -webkit-backdrop-filter blur(var(--glass-blur))
+  border 1px solid var(--border)
+  border-radius var(--radius-lg)
+  width 960px
+  max-width 95vw
+  max-height 85vh
+  display flex
+  flex-direction column
+  box-shadow var(--shadow-lg)
+  animation scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)
+  overflow hidden
+
+.preview-header
+  display flex
+  align-items center
+  justify-content space-between
+  padding 16px 24px
+  border-bottom 1px solid var(--border)
+  flex-shrink 0
+  background var(--surface-weak)
+  h3
+    font-size 15px
+    color var(--text)
+    overflow hidden
+    text-overflow ellipsis
+    white-space nowrap
+    margin-right 12px
+    font-weight 600
+
+.preview-body
+  flex 1
+  overflow-y auto
+  padding 0
+
+.preview-loading
+  display flex
+  flex-direction column
+  align-items center
+  justify-content center
+  padding 80px 20px
+  gap 16px
+  color var(--text-secondary)
+
+.preview-progress
+  text-align center
+  padding 40px 20px
+  font-size 15px
+  color var(--text-secondary)
+  font-weight 500
+
+.preview-content
+  &.markdown-body
+    padding 28px 32px
+    line-height 1.8
+    color var(--text)
+    font-size 14px
+    h1
+      font-size 24px
+      font-weight 700
+      margin 0 0 14px
+      padding-bottom 10px
+      border-bottom 1px solid var(--border)
+    h2
+      font-size 20px
+      font-weight 600
+      margin 24px 0 12px
+    h3
+      font-size 16px
+      font-weight 600
+      margin 20px 0 10px
+    h4
+    h5
+    h6
+      font-size 14px
+      font-weight 600
+      margin 16px 0 8px
+    p
+      margin 0 0 12px
+      &:last-child
+        margin-bottom 0
+    ul
+    ol
+      margin 8px 0 12px
+      padding-left 24px
+    li
+      margin 6px 0
+    a
+      color var(--accent)
+      text-decoration none
+      &:hover
+        text-decoration underline
+    strong
+      font-weight 600
+    em
+      font-style italic
+    code
+      background var(--surface-weak)
+      padding 3px 8px
+      border-radius 4px
+      font-size 13px
+      font-family 'SFMono-Regular', 'Fira Code', 'Fira Mono', 'Consolas', 'Monaco', 'Courier New', monospace
+    pre
+      background var(--surface-weak)
+      border 1px solid var(--border)
+      border-radius 8px
+      padding 16px
+      margin 12px 0
+      overflow-x auto
+      code
+        background none
+        padding 0
+        border-radius 0
+        font-size 13px
+        line-height 1.6
+    blockquote
+      border-left 4px solid var(--accent)
+      padding 12px 18px
+      margin 12px 0
+      background var(--accent-soft)
+      border-radius 0 8px 8px 0
+      color var(--text-secondary)
+      p
+        margin 0
+    hr
+      border none
+      border-top 1px solid var(--border)
+      margin 20px 0
+    img
+      max-width 100%
+      border-radius 8px
+      margin 12px 0
+      box-shadow var(--shadow-sm)
+  &.code-body
+  &.text-body
+    padding 0
+    pre
+      margin 0
+      padding 24px 28px
+      background var(--surface-weak)
+      font-family 'SFMono-Regular', 'Fira Code', 'Fira Mono', 'Consolas', 'Monaco', 'Courier New', monospace
+      font-size 13px
+      line-height 1.7
+      color var(--text)
+      overflow-x auto
+      white-space pre
+      code
+        background none
+        padding 0
+        font-family inherit
+        font-size inherit
+        color inherit
+    .hljs
+      color var(--text)
+      .hljs-keyword
+      .hljs-selector-tag
+      .hljs-title
+      .hljs-section
+      .hljs-doctag
+      .hljs-name
+      .hljs-strong
+        font-weight bold
+      .hljs-comment
+        color var(--text-secondary)
+        font-style italic
+      .hljs-string
+      .hljs-title.class_
+      .hljs-title.class_.inherited__
+      .hljs-template-variable
+      .hljs-addition
+        color #50a14f
+      .hljs-built_in
+      .hljs-type
+      .hljs-params
+      .hljs-variable
+        color #c18401
+      .hljs-number
+      .hljs-literal
+        color #986801
+      .hljs-attr
+      .hljs-attribute
+      .hljs-symbol
+      .hljs-selector-id
+      .hljs-selector-class
+        color #4078f2
+      .hljs-meta
+      .hljs-meta-keyword
+        color #a626a4
+      .hljs-tag
+      .hljs-formula
+        color #e45649
+      .hljs-regexp
+      .hljs-link
+        color #50a14f
+      .hljs-deletion
+        color #e45649
+      .hljs-emphasis
+        font-style italic
+      .hljs-bullet
+      .hljs-quote
+        color #4078f2
+      .hljs-code
+        color var(--text)
+  &.image-body
+    display flex
+    align-items center
+    justify-content center
+    padding 28px
+    img
+      max-width 100%
+      max-height 60vh
+      object-fit contain
+      border-radius 10px
+      box-shadow var(--shadow-md)
+  &.audio-body
+    display flex
+    justify-content center
+    padding 28px
+    audio
+      width 100%
+      max-width 520px
+  &.video-body
+    display flex
+    justify-content center
+    padding 28px
+    video
+      width 100%
+      max-width 720px
+      max-height 60vh
+      border-radius 10px
+      box-shadow var(--shadow-md)
+  &.pdf-body
+    padding 0
+    embed
+      width 100%
+      height 70vh
+      border none
+  &.html-body
+    padding 0
+    iframe
+      border none
+  &.docx-body
+    padding 28px 32px
+    overflow auto
+    max-height 70vh
+    h1, h2, h3, h4, h5, h6
+      margin 18px 0 10px
+    p
+      margin 0 0 12px
+    table
+      border-collapse collapse
+      width 100%
+      th, td
+        border 1px solid var(--border)
+        padding 10px
+        text-align left
+  &.xlsx-body
+    padding 18px
+    overflow auto
+    max-height 70vh
+    .xlsx-tabs
+      display flex
+      gap 8px
+      margin-bottom 18px
+      flex-wrap wrap
+    .xlsx-tab
+      padding 10px 18px
+      border 1px solid var(--border)
+      border-radius 8px 8px 0 0
+      background var(--surface-weak)
+      cursor pointer
+      font-size 13px
+      transition all 0.2s
+      &:hover
+        background var(--surface)
+      &.active
+        background var(--accent)
+        color white
+        border-color var(--accent)
+    .xlsx-sheet
+      table
+        border-collapse collapse
+        width 100%
+        font-size 13px
+        th, td
+          border 1px solid var(--border)
+          padding 8px 12px
+          text-align left
+          white-space nowrap
+        th
+          background var(--surface-weak)
+          font-weight 600
+        tr:hover
+          background var(--surface)
+  &.pptx-body
+    display flex
+    align-items center
+    justify-content center
+    padding 48px
+    .preview-info
+      color var(--text-secondary)
+      text-align center
+      font-size 14px
+      line-height 1.7
+  .preview-error
+    color var(--text-secondary)
+    padding 28px
+    text-align center
+
+/* ---- SETTINGS PANEL ---- */
+.settings-panel
+  position fixed
+  top 0
+  right -420px
+  width 400px
+  max-width 90vw
+  height 100vh
+  background var(--surface-strong)
+  backdrop-filter blur(var(--glass-blur))
+  -webkit-backdrop-filter blur(var(--glass-blur))
+  border-left 1px solid var(--border)
+  box-shadow var(--shadow-lg)
+  z-index 10000
+  transition right 0.4s cubic-bezier(0.22, 1, 0.36, 1)
+  overflow-y auto
+  &.open
+    right 0
+
+.settings-overlay
+  position fixed
+  inset 0
+  background rgba(0,0,0,0.4)
+  backdrop-filter blur(8px)
+  -webkit-backdrop-filter blur(8px)
+  z-index 9999
+  opacity 0
+  pointer-events none
+  transition opacity 0.3s ease
+  &.open
+    opacity 1
+    pointer-events auto
+
+.settings-header
+  display flex
+  align-items center
+  justify-content space-between
+  padding 24px 28px
+  border-bottom 1px solid var(--border)
+  background var(--surface-weak)
+  h3
+    font-size 18px
+    font-weight 700
+    color var(--text)
+    display flex
+    align-items center
+    gap 10px
+    i
+      color var(--accent)
+
+.settings-body
+  padding 24px 28px
+
+.settings-section
+  margin-bottom 28px
+  &:last-child
+    margin-bottom 0
+
+.settings-section-title
+  font-size 13px
+  font-weight 600
+  color var(--text-muted)
+  text-transform uppercase
+  letter-spacing 0.5px
+  margin-bottom 14px
+  padding-bottom 8px
+  border-bottom 1px solid var(--border)
+
+.settings-item
+  display flex
+  align-items center
+  justify-content space-between
+  padding 14px 0
+  border-bottom 1px solid var(--border)
+  &:last-child
+    border-bottom none
+
+.settings-item-label
+  font-size 14px
+  color var(--text)
+  font-weight 500
+
+.settings-item-desc
+  font-size 12px
+  color var(--text-muted)
+  margin-top 4px
+
+.settings-select
+  padding 8px 14px
+  border 1px solid var(--border)
+  border-radius var(--radius-sm)
+  background var(--surface)
+  color var(--text)
+  font-size 13px
+  cursor pointer
+  transition all 0.3s ease
+  min-width 200px
+  option
+    background var(--surface-strong)
+    color var(--text)
+  &:focus
+    outline none
+    border-color var(--accent)
+    box-shadow 0 0 0 3px var(--accent-soft)
+
+.settings-input
+  padding 10px 14px
+  border 1px solid var(--border)
+  border-radius var(--radius-sm)
+  background var(--surface)
+  color var(--text)
+  font-size 13px
+  width 100%
+  transition all 0.3s ease
+  &:focus
+    outline none
+    border-color var(--accent)
+    box-shadow 0 0 0 3px var(--accent-soft)
+
+.settings-color-picker
+  display flex
+  align-items center
+  gap 12px
+
+.color-preview
+  width 36px
+  height 36px
+  border-radius 8px
+  border 2px solid var(--border)
+  cursor pointer
+  transition all 0.3s ease
+  &:hover
+    transform scale(1.1)
+
+.color-presets
+  display flex
+  gap 8px
+  flex-wrap wrap
+
+.color-preset
+  width 28px
+  height 28px
+  border-radius 6px
+  cursor pointer
+  border 2px solid transparent
+  transition all 0.3s ease
+  &:hover
+    transform scale(1.15)
+  &.active
+    border-color var(--text)
+    box-shadow 0 0 0 2px var(--accent-soft)
+
+/* ---- BACKGROUND IMAGE SETTINGS ---- */
+.bg-image-section
+  margin-top 16px
+  padding 16px
+  background var(--surface-weak)
+  border-radius var(--radius-sm)
+  border 1px solid var(--border)
+
+.bg-image-preview
+  width 100%
+  height 120px
+  border-radius 8px
+  background var(--surface)
+  border 1px solid var(--border)
+  margin-bottom 12px
+  display flex
+  align-items center
+  justify-content center
+  overflow hidden
+  position relative
+  img
+    width 100%
+    height 100%
+    object-fit cover
+  .bg-placeholder
+    color var(--text-muted)
+    font-size 13px
+    display flex
+    flex-direction column
+    align-items center
+    gap 8px
+    i
+      font-size 24px
+      opacity 0.4
+
+.bg-upload-btn
+  display inline-flex
+  align-items center
+  gap 8px
+  padding 8px 16px
+  background var(--accent)
+  color #fff
+  border none
+  border-radius var(--radius-sm)
+  font-size 13px
+  cursor pointer
+  transition all 0.3s ease
+  &:hover
+    background var(--accent-hover)
+    transform translateY(-1px)
+    box-shadow 0 4px 12px var(--accent-glow)
+
+.bg-opacity-slider
+  width 100%
+  margin-top 12px
+  accent-color var(--accent)
+
+/* ---- RESPONSIVE ---- */
+@media (max-width: 900px)
+  .header-bar-inner
+    padding 14px 24px
+  .header-title
+    font-size 18px
+  .header-logo
+    width 38px
+    height 38px
+    i
+      font-size 18px
+  .header-stat
+    display none
+  .file-grid
+    grid-template-columns repeat(3, 1fr)
+  .settings-panel
+    width 100%
+    right -100%
+  :root
+    --lang-btn-size: 2.25rem
+    --lang-btn-font-size: 0.8125rem
+
+@media (max-width: 640px)
+  .app
+    padding 0 16px 32px
+  .header-bar-inner
+    padding 10px 16px
+    gap 8px
+  .header-left
+    gap 8px
+  .header-title
+    font-size 16px
+  .header-subtitle
+    display none
+  .header-logo
+    width 32px
+    height 32px
+    border-radius 10px
+    i
+      font-size 16px
+  .header-right
+    gap 6px
+  .header-btn
+    width 32px
+    height 32px
+    border-radius 8px
+    i
+      font-size 14px
+  .lang-btn
+    width var(--lang-btn-size, 2rem) !important
+    height var(--lang-btn-size, 2rem) !important
+  .lang-label
+    font-size 0.75rem !important
+  .file-grid
+    grid-template-columns repeat(2, 1fr)
+    gap 12px
+  .file-card
+    padding 20px 14px 16px
+    gap 10px
+  .card-icon
+    width 50px
+    height 50px
+    i
+      font-size 24px
+  .search-box
+    flex 1
+    min-width 160px
+    input
+      width 100%
+  .col-date
+  .cell-date
+  .col-size
+  .cell-size
+    display none
+  .col-action
+    width 120px
+  .cell-action
+    width 120px
+    gap 6px
+  .toolbar
+    flex-direction column
+    align-items stretch
+    gap 12px
+    padding 12px 16px
+  .toolbar-right
+    justify-content flex-end
+  .table-header .col-name
+    padding-left 40px
+  .preview-modal
+    max-height 90vh
+  .preview-header
+    padding 12px 16px
+    h3
+      font-size 14px
+  .settings-panel
+    width 100%
+    right -100%
+  .settings-body
+    padding 20px
+  :root
+    --lang-btn-size: 2rem
+    --lang-btn-font-size: 0.75rem
+    --lang-dropdown-min-width: 10rem
+    --lang-item-padding: 0.625rem 0.875rem

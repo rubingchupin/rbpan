@@ -1,0 +1,98 @@
+{
+  "app": {
+    "title": "rbpan",
+    "subtitle": "Lightweight cloud drive"
+  },
+  "breadcrumb": {
+    "root": "Root"
+  },
+  "toolbar": {
+    "search": "Search files...",
+    "refresh": "Refresh",
+    "listView": "List View",
+    "gridView": "Grid View"
+  },
+  "status": {
+    "loading": "Loading file list...",
+    "error": "Load failed",
+    "errorHint": "Cannot connect to server",
+    "manifestError": "Cannot connect to data source. Set localFallback in _config.js or check manifestUrl",
+    "retry": "Retry",
+    "empty": "This folder is empty"
+  },
+  "fileList": {
+    "folder": "Folder",
+    "headerName": "Name",
+    "headerDate": "Date",
+    "headerSize": "Size",
+    "headerAction": "Action",
+    "chunks": "{n} chunks",
+    "chunkSize": "{size}/chunk"
+  },
+  "date": {
+    "justNow": "just now",
+    "minutesAgo": "min ago",
+    "hoursAgo": "hr ago",
+    "daysAgo": "days ago"
+  },
+  "download": {
+    "btn": "Download",
+    "title": "Downloading",
+    "progress": "{p}%",
+    "speed": "{speed}",
+    "chunkProgress": "Chunk {done}/{total}",
+    "complete": "Download complete, saving...",
+    "failed": "Download failed",
+    "cancel": "Cancel",
+    "close": "Close",
+    "verifying": "Verifying file integrity...",
+    "verifyOk": "SHA-256 verified",
+    "verifyFail": "SHA-256 verification failed! File may be corrupted"
+  },
+  "lang": {
+    "switch": "中文",
+    "label": "Language"
+  },
+  "theme": {
+    "toggle": "Toggle Theme"
+  },
+  "footer": {
+    "powered": "Powered by rbpan",
+    "poweredLink": "https://github.com/rubingchupin/rbpan"
+  },
+  "preview": {
+    "btn": "Preview",
+    "close": "Close",
+    "loading": "Loading...",
+    "loadError": "Failed to load file",
+    "unsupported": "This file type is not supported for preview"
+  },
+  "settings": {
+    "label": "Settings",
+    "appearance": "Appearance",
+    "theme": "Theme Mode",
+    "themeDesc": "Toggle light/dark theme",
+    "light": "Light",
+    "dark": "Dark",
+    "layout": "Layout",
+    "defaultView": "Default View",
+    "showFolderImg": "Show Folders as Image View",
+    "showFileCount": "Show File Count Info",
+    "showGalleryThumb": "Show Gallery Thumbnails",
+    "lastImage": "Remember Last Viewed Image",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "background": "Background Image",
+    "noBg": "No background image",
+    "uploadBg": "Upload Background",
+    "bgOpacity": "Background Opacity",
+    "clearBg": "Clear Background",
+    "invalidImage": "Please select an image file",
+    "color": "Theme Color",
+    "accentColor": "Accent Color"
+  },
+  "announcement": {
+    "dontShowAgain": "Don't show again",
+    "close": "Close"
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "app": {
+    "title": "如冰網盤",
+    "subtitle": "輕量級網盤系統"
+  },
+  "breadcrumb": {
+    "root": "根目錄"
+  },
+  "toolbar": {
+    "search": "搜尋檔案...",
+    "refresh": "重新整理",
+    "listView": "列表檢視",
+    "gridView": "網格檢視"
+  },
+  "status": {
+    "loading": "正在載入檔案列表...",
+    "error": "載入失敗",
+    "errorHint": "無法連線到伺服器",
+    "manifestError": "無法連線資料來源，請在 _config.js 中設定 localFallback 或檢查 manifestUrl",
+    "retry": "重試",
+    "empty": "此資料夾為空"
+  },
+  "fileList": {
+    "folder": "資料夾",
+    "headerName": "名稱",
+    "headerDate": "日期",
+    "headerSize": "大小",
+    "headerAction": "操作",
+    "chunks": "{n} 個分片",
+    "chunkSize": "{size}/片"
+  },
+  "date": {
+    "justNow": "剛剛",
+    "minutesAgo": "分鐘前",
+    "hoursAgo": "小時前",
+    "daysAgo": "天前"
+  },
+  "download": {
+    "btn": "下載",
+    "title": "正在下載",
+    "progress": "{p}%",
+    "speed": "{speed}",
+    "chunkProgress": "分片 {done}/{total}",
+    "complete": "下載完成，正在儲存...",
+    "failed": "下載失敗",
+    "cancel": "取消",
+    "close": "關閉",
+    "verifying": "正在校驗檔案完整性...",
+    "verifyOk": "SHA-256 校驗通過",
+    "verifyFail": "SHA-256 校驗失敗！檔案可能已損壞"
+  },
+  "lang": {
+    "switch": "English",
+    "label": "語言"
+  },
+  "theme": {
+    "toggle": "切換主題"
+  },
+  "footer": {
+    "powered": "由 如冰網盤 驅動",
+    "poweredLink": "https://github.com/rubingchupin/rbpan"
+  },
+  "preview": {
+    "btn": "預覽",
+    "close": "關閉",
+    "loading": "載入中...",
+    "loadError": "檔案載入失敗",
+    "unsupported": "不支援預覽此檔案類型"
+  },
+  "settings": {
+    "label": "設定",
+    "appearance": "外觀",
+    "theme": "主題模式",
+    "themeDesc": "切換淺色/深色主題",
+    "light": "淺色",
+    "dark": "深色",
+    "layout": "佈局",
+    "defaultView": "預設檢視",
+    "showFolderImg": "顯示資料夾為圖片檢視",
+    "showFileCount": "顯示檔案計數資訊",
+    "showGalleryThumb": "顯示圖庫縮圖",
+    "lastImage": "記住最後瀏覽的圖片",
+    "enabled": "開啟",
+    "disabled": "關閉",
+    "background": "背景圖片",
+    "noBg": "暫無背景圖片",
+    "uploadBg": "上傳背景圖",
+    "bgOpacity": "背景透明度",
+    "clearBg": "清除背景",
+    "invalidImage": "請選擇圖片檔案",
+    "color": "主題色",
+    "accentColor": "強調色"
+  },
+  "announcement": {
+    "dontShowAgain": "不再顯示",
+    "close": "關閉"
+  }
+}

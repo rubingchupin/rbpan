@@ -1,0 +1,26 @@
+# CLI language: 'en' | 'zh-CN'
+cliLang: 'zh-CN'
+
+# Directory containing files to share
+inputDir: './input'
+
+# Output directory for generated chunks and manifest
+outputDir: './output'
+
+# Max chunk size in bytes (default 25MB, 1MB = 1000KB)
+maxChunkSize: 25000000
+
+# Chunk file extension (default 'rbpan')
+# Chunks will be named like: file.zip.rbpan1, file.zip.rbpan2
+chunkExtension: 'rbpan'
+
+# Base URL for deployed files (e.g. GitHub Pages URL)
+# Leave empty to use relative paths
+baseUrl: ''
+
+# Git repository config for auto-push after generation
+git:
+  repoUrl: 'https://github.com/rubingchupin/rbpan.git'
+  repoBranch: 'server'
+  autoPush: false
+  commitMessage: 'Update: rbpan files'

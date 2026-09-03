@@ -1,0 +1,98 @@
+{
+  "app": {
+    "title": "rbpan",
+    "subtitle": "軽量クラウドドライブ"
+  },
+  "breadcrumb": {
+    "root": "ルート"
+  },
+  "toolbar": {
+    "search": "ファイルを検索...",
+    "refresh": "更新",
+    "listView": "リスト表示",
+    "gridView": "グリッド表示"
+  },
+  "status": {
+    "loading": "ファイル一覧を読み込み中...",
+    "error": "読み込み失敗",
+    "errorHint": "サーバーに接続できません",
+    "manifestError": "データソースに接続できません。_config.js で localFallback を設定するか、manifestUrl を確認してください",
+    "retry": "再試行",
+    "empty": "このフォルダは空です"
+  },
+  "fileList": {
+    "folder": "フォルダ",
+    "headerName": "名前",
+    "headerDate": "日付",
+    "headerSize": "サイズ",
+    "headerAction": "操作",
+    "chunks": "{n} 分割",
+    "chunkSize": "{size}/分割"
+  },
+  "date": {
+    "justNow": "たった今",
+    "minutesAgo": "分前",
+    "hoursAgo": "時間前",
+    "daysAgo": "日前"
+  },
+  "download": {
+    "btn": "ダウンロード",
+    "title": "ダウンロード中",
+    "progress": "{p}%",
+    "speed": "{speed}",
+    "chunkProgress": "分割 {done}/{total}",
+    "complete": "ダウンロード完了、保存中...",
+    "failed": "ダウンロード失敗",
+    "cancel": "キャンセル",
+    "close": "閉じる",
+    "verifying": "ファイルの整合性を検証中...",
+    "verifyOk": "SHA-256 検証成功",
+    "verifyFail": "SHA-256 検証失敗！ファイルが破損している可能性があります"
+  },
+  "lang": {
+    "switch": "한국어",
+    "label": "言語"
+  },
+  "theme": {
+    "toggle": "テーマ切替"
+  },
+  "footer": {
+    "powered": "Powered by rbpan",
+    "poweredLink": "https://github.com/rubingchupin/rbpan"
+  },
+  "preview": {
+    "btn": "プレビュー",
+    "close": "閉じる",
+    "loading": "読み込み中...",
+    "loadError": "ファイルの読み込みに失敗しました",
+    "unsupported": "このファイル形式はプレビューに対応していません"
+  },
+  "settings": {
+    "label": "設定",
+    "appearance": "外観",
+    "theme": "テーマモード",
+    "themeDesc": "ライト/ダークテーマを切り替え",
+    "light": "ライト",
+    "dark": "ダーク",
+    "layout": "レイアウト",
+    "defaultView": "デフォルト表示",
+    "showFolderImg": "フォルダを画像表示",
+    "showFileCount": "ファイル数を表示",
+    "showGalleryThumb": "ギャラリーサムネイルを表示",
+    "lastImage": "最後に閲覧した画像を記憶",
+    "enabled": "オン",
+    "disabled": "オフ",
+    "background": "背景画像",
+    "noBg": "背景画像なし",
+    "uploadBg": "背景をアップロード",
+    "bgOpacity": "背景の透明度",
+    "clearBg": "背景をクリア",
+    "invalidImage": "画像ファイルを選択してください",
+    "color": "テーマカラー",
+    "accentColor": "アクセントカラー"
+  },
+  "announcement": {
+    "dontShowAgain": "今後表示しない",
+    "close": "閉じる"
+  }
+}
