@@ -190,6 +190,8 @@ git_push() {
       clean_url=$(echo "$repo_url" | sed 's|^git@||;s|:|/|')
       repo_url="https://${clean_url}"
     fi
+    # 移除末尾斜杠
+    repo_url=$(echo "$repo_url" | sed 's|/$||')
     # 确保以 .git 结尾
     if ! echo "$repo_url" | grep -q "\.git$"; then
       repo_url="${repo_url}.git"
@@ -198,7 +200,7 @@ git_push() {
     # 转换为 SSH URL
     if echo "$repo_url" | grep -q "^https://"; then
       # https://host/user/repo -> git@host:user/repo
-      clean_url=$(echo "$repo_url" | sed 's|^https://||;s|\.git$||')
+      clean_url=$(echo "$repo_url" | sed 's|^https://||;s|\.git$||;s|/$||')
       host=$(echo "$clean_url" | cut -d'/' -f1)
       user=$(echo "$clean_url" | cut -d'/' -f2)
       repo=$(echo "$clean_url" | cut -d'/' -f3)

@@ -264,6 +264,8 @@ if "!GIT_PROTOCOL!"=="https" (
         set "REPO_URL_TMP=!REPO_URL_TMP::=/!"
         set "REPO_URL=https://!REPO_URL_TMP!"
     )
+    REM 移除末尾斜杠
+    if "!REPO_URL:~-1!"=="/" set "REPO_URL=!REPO_URL:~0,-1!"
     REM 确保以 .git 结尾
     echo !REPO_URL! | findstr /c:".git" >nul
     if errorlevel 1 (
@@ -275,6 +277,8 @@ if "!GIT_PROTOCOL!"=="https" (
     if not errorlevel 1 (
         set "REPO_URL_TMP=!REPO_URL:https://=!"
         set "REPO_URL_TMP=!REPO_URL_TMP:.git=!"
+        REM 移除末尾斜杠
+        if "!REPO_URL_TMP:~-1!"=="/" set "REPO_URL_TMP=!REPO_URL_TMP:~0,-1!"
         for /f "tokens=1,2,3,* delims=/" %%a in ("!REPO_URL_TMP!") do (
             set "REPO_HOST=%%a"
             set "REPO_USER=%%b"
