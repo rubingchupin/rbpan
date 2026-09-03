@@ -916,7 +916,7 @@ const app = createApp({
 
       const baseUrl = this.manifest.baseUrl || this.manifestUrl.replace(/\/manifest\.json$/, '');
       const chunkExtension = this.manifest.chunkExtension || 'rbpan';
-      const threads = APP_CONFIG.downloadThreads || 6;
+      const threads = APP_CONFIG.downloadThreads !== undefined ? APP_CONFIG.downloadThreads : 6;
 
       try {
         const { blob } = await this.downloader.downloadFile(

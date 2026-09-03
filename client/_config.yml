@@ -23,8 +23,8 @@ manifestUrl: 'https://pan-data.rubing.us.kg/manifest.json'
 localFallback: 'http://localhost:3001/manifest.json'
 
 # ===== 下载配置 =====
-# 下载线程数（1-16）
-downloadThreads: 6
+# 下载线程数（1-16，0 表示不限制）
+downloadThreads: 0
 
 # ===== 主题配置 =====
 # 主题名称（对应 themes/ 目录下的文件夹名）

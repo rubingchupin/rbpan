@@ -251,9 +251,13 @@ exit /b 0
 
 :GIT_PUSH
 set "WORK_DIR=%~1"
-set "REPO_URL=%~2"
+set "REPO_URL_IN=%~2"
 set "BRANCH=%~3"
 set "MSG=%~4"
+set "REPO_URL=!REPO_URL_IN!"
+
+echo [DEBUG] 原始URL: !REPO_URL!
+echo [DEBUG] 选择协议: !GIT_PROTOCOL!
 
 REM 根据选择的协议转换 URL
 if "!GIT_PROTOCOL!"=="https" (
@@ -290,6 +294,8 @@ if "!GIT_PROTOCOL!"=="https" (
     )
 )
 
+echo [DEBUG] 转换后URL: !REPO_URL!
+
 git --version >nul 2>&1
 if errorlevel 1 (
     echo !T_GITNF!
@@ -325,10 +331,16 @@ git config gc.auto 0 2>nul
 echo !T_AFILES!
 git add -A
 
-REM 检查是否有变更，无变更则跳过提交和推送
-git diff --cached --quiet 2>nul
-if not errorlevel 1 (
+REM 检查是否有变更（使用 git status 更可靠）
+set "HAS_CHANGES="
+for /f "delims=" %%i in ('git status --porcelain 2^>nul') do (
+    set "HAS_CHANGES=%%i"
+)
+if not defined HAS_CHANGES (
     echo !T_NOCHANGES!
+    echo 当前目录: !WORK_DIR!
+    echo 仓库URL: !REPO_URL!
+    echo 分支: !BRANCH!
     exit /b 0
 )
 

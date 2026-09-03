@@ -51,7 +51,7 @@
     var chunkFiles = fileInfo.files;
     var totalSize = fileInfo.size;
     var totalChunks = chunkFiles.length;
-    var threadCount = Math.min(threads || 6, totalChunks);
+    var threadCount = threads === 0 ? totalChunks : Math.min(threads || 6, totalChunks);
     var downloaded = new Array(totalChunks);
     var completed = 0;
     var queue = chunkFiles.map(function (f, i) { return { index: i, url: buildChunkUrl(baseUrl, fileInfo, f) }; });
@@ -125,7 +125,7 @@
         if (fileInfo.chunks === 1) {
           return downloadSingle(buildChunkUrl(baseUrl, fileInfo, fileInfo.files[0]));
         }
-        return downloadChunks(baseUrl, fileInfo, threads || 6);
+        return downloadChunks(baseUrl, fileInfo, threads !== undefined ? threads : 6);
       });
   }
 

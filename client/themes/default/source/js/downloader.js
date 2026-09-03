@@ -83,7 +83,8 @@ class ChunkDownloader {
 
   async downloadChunks(chunkUrls, totalSize, threads, signal, onProgress, downloadId) {
     const totalChunks = chunkUrls.length;
-    const threadCount = Math.min(threads || 6, totalChunks);
+    // threads=0 表示不限制，使用所有分片数量作为线程数
+    const threadCount = threads === 0 ? totalChunks : Math.min(threads || 6, totalChunks);
     const downloaded = new Array(totalChunks);
     let completed = 0;
     let loaded = 0;

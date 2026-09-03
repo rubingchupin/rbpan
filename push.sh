@@ -230,8 +230,10 @@ git_push() {
   echo "$T_AFILES"
   git add -A
 
-  # 检查是否有变更，无变更则跳过提交和推送
-  if git diff --cached --quiet 2>/dev/null; then
+  # 检查是否有变更（使用 git status 更可靠）
+  local changes
+  changes=$(git status --porcelain 2>/dev/null)
+  if [ -z "$changes" ]; then
     echo "$T_NOCHANGES"
     return 0
   fi
