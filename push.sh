@@ -46,7 +46,7 @@ fi
 echo ""
 echo "  $T_MSELECT:"
 echo ""
-echo "  [1] $T_MFULL"
+echo "  [1] $T_FULL"
 echo "  [2] $T_MSERVER"
 echo "  [3] $T_MCLIENT"
 echo "  [A] $T_MALL"
@@ -54,6 +54,23 @@ echo "  [Q] $T_MQUIT"
 echo ""
 
 read -r -p "$T_EOPT [1/2/3/A/Q]: " MODE
+
+# 协议选择
+echo ""
+echo "  $T_PROTO_SELECT:"
+echo "  [1] SSH (git@)"
+echo "  [2] HTTPS (https://)"
+echo ""
+read -r -p "  $T_PROTO_CHOICE [1/2]: " PROTO_CHOICE
+PROTO_CHOICE="${PROTO_CHOICE:-1}"
+if [ "$PROTO_CHOICE" = "2" ]; then
+  GIT_PROTOCOL="https"
+  echo "  $T_PROTO_USE: HTTPS"
+else
+  GIT_PROTOCOL="ssh"
+  echo "  $T_PROTO_USE: SSH"
+fi
+echo ""
 
 case "$MODE" in
   [Qq]) exit 0 ;;
@@ -165,32 +182,50 @@ git_push() {
 
   cd "$work_dir"
 
-  if [ ! -d ".git" ]; then
-    echo "$T_IGIT"
-    git init
-    git remote add origin "$repo_url"
+  # 根据选择的协议转换 URL
+  if [ "$GIT_PROTOCOL" = "https" ]; then
+    # 转换为 HTTPS URL
+    if echo "$repo_url" | grep -q "^git@"; then
+      # git@host:user/repo -> https://host/user/repo
+      clean_url=$(echo "$repo_url" | sed 's|^git@||;s|:|/|')
+      repo_url="https://${clean_url}"
+    fi
+    # 确保以 .git 结尾
+    if ! echo "$repo_url" | grep -q "\.git$"; then
+      repo_url="${repo_url}.git"
+    fi
   else
-    git remote set-url origin "$repo_url" 2>/dev/null || git remote add origin "$repo_url"
-  fi
-
-  echo "$T_FETCH"
-  git fetch origin "$branch" --depth=1 --no-tags 2>/dev/null || true
-
-  echo "$T_AFILES"
-  # 将 HTTPS URL 转换为 SSH URL
-  if echo "$repo_url" | grep -q "https://"; then
-    # 移除 https:// 和 .git 后缀
-    clean_url=$(echo "$repo_url" | sed 's|https://||;s|\.git$||')
-    # 提取主机名、用户名和仓库名
-    host=$(echo "$clean_url" | cut -d'/' -f1)
-    user=$(echo "$clean_url" | cut -d'/' -f2)
-    repo=$(echo "$clean_url" | cut -d'/' -f3)
-    if [ -n "$host" ] && [ -n "$user" ] && [ -n "$repo" ]; then
-      repo_url="git@${host}:${user}/${repo}"
+    # 转换为 SSH URL
+    if echo "$repo_url" | grep -q "^https://"; then
+      # https://host/user/repo -> git@host:user/repo
+      clean_url=$(echo "$repo_url" | sed 's|^https://||;s|\.git$||')
+      host=$(echo "$clean_url" | cut -d'/' -f1)
+      user=$(echo "$clean_url" | cut -d'/' -f2)
+      repo=$(echo "$clean_url" | cut -d'/' -f3)
+      if [ -n "$host" ] && [ -n "$user" ] && [ -n "$repo" ]; then
+        repo_url="git@${host}:${user}/${repo}"
+      fi
     fi
   fi
 
+  # 初始化或更新 remote
+  if [ ! -d ".git" ]; then
+    echo "$T_IGIT"
+    git init -q
+    git remote add origin "$repo_url"
+  else
+    # 仅在 URL 变化时更新 remote
+    current_url=$(git remote get-url origin 2>/dev/null || echo "")
+    if [ "$current_url" != "$repo_url" ]; then
+      git remote set-url origin "$repo_url" 2>/dev/null || git remote add origin "$repo_url"
+    fi
+  fi
+
+  # 配置 git 优化选项
   git config core.autocrlf false
+  git config gc.auto 0 2>/dev/null || true
+
+  echo "$T_AFILES"
   git add -A
 
   # 检查是否有变更，无变更则跳过提交和推送
@@ -200,7 +235,10 @@ git_push() {
   fi
 
   echo "$T_COMMIT"
-  git commit -m "$msg" 2>/dev/null || echo "$T_NOCOMMIT"
+  git commit -m "$msg" --quiet 2>/dev/null || echo "$T_NOCOMMIT"
+
+  echo "$T_FETCH"
+  git fetch origin "$branch" --depth=1 --no-tags --quiet 2>/dev/null || true
 
   echo "$T_PUSHING"
   git push -u origin "HEAD:$branch" --force --quiet

@@ -23,6 +23,9 @@ if "!CLI_LANG!"=="zh-CN" (
   set "T_MALL=全部三个仓库"
   set "T_MQUIT=退出"
   set "T_EOPT=请输入选项"
+  set "T_PROTO_SELECT=选择推送协议"
+  set "T_PROTO_CHOICE=请选择协议"
+  set "T_PROTO_USE=使用协议"
   set "T_INVALID=无效选项"
   set "T_FULL=完整项目推送"
   set "T_SERVER=服务端输出推送"
@@ -59,6 +62,9 @@ if "!CLI_LANG!"=="zh-CN" (
   set "T_MALL=All three repos"
   set "T_MQUIT=Quit"
   set "T_EOPT=Enter option"
+  set "T_PROTO_SELECT=Select push protocol"
+  set "T_PROTO_CHOICE=Select protocol"
+  set "T_PROTO_USE=Using protocol"
   set "T_INVALID=Invalid option"
   set "T_FULL=Full Project Push"
   set "T_SERVER=Server Output Push"
@@ -124,6 +130,23 @@ echo   [Q] !T_MQUIT!
 echo.
 
 set /p "MODE=!T_EOPT! [1/2/3/A/Q]: "
+
+REM 协议选择
+echo.
+echo   !T_PROTO_SELECT!:
+echo   [1] SSH (git@)
+echo   [2] HTTPS (https://)
+echo.
+set /p "PROTO_CHOICE=!T_PROTO_CHOICE! [1/2]: "
+if "!PROTO_CHOICE!"=="" set "PROTO_CHOICE=1"
+if "!PROTO_CHOICE!"=="2" (
+    set "GIT_PROTOCOL=https"
+    echo   !T_PROTO_USE!: HTTPS
+) else (
+    set "GIT_PROTOCOL=ssh"
+    echo   !T_PROTO_USE!: SSH
+)
+echo.
 
 if /i "!MODE!"=="Q" exit /b 0
 if /i "!MODE!"=="1" (
@@ -232,18 +255,34 @@ set "REPO_URL=%~2"
 set "BRANCH=%~3"
 set "MSG=%~4"
 
-REM 将 HTTPS URL 转换为 SSH URL
-echo !REPO_URL! | findstr /c:"https://" >nul
-if not errorlevel 1 (
-    set "REPO_URL_TMP=!REPO_URL:https://=!"
-    set "REPO_URL_TMP=!REPO_URL_TMP:.git=!"
-    for /f "tokens=1,2,3,* delims=/" %%a in ("!REPO_URL_TMP!") do (
-        set "REPO_HOST=%%a"
-        set "REPO_USER=%%b"
-        set "REPO_NAME=%%c"
+REM 根据选择的协议转换 URL
+if "!GIT_PROTOCOL!"=="https" (
+    REM 转换为 HTTPS URL
+    echo !REPO_URL! | findstr /c:"git@" >nul
+    if not errorlevel 1 (
+        set "REPO_URL_TMP=!REPO_URL:git@=!"
+        set "REPO_URL_TMP=!REPO_URL_TMP::=/!"
+        set "REPO_URL=https://!REPO_URL_TMP!"
     )
-    if defined REPO_HOST if defined REPO_USER if defined REPO_NAME (
-        set "REPO_URL=git@!REPO_HOST!:!REPO_USER!/!REPO_NAME!"
+    REM 确保以 .git 结尾
+    echo !REPO_URL! | findstr /c:".git" >nul
+    if errorlevel 1 (
+        set "REPO_URL=!REPO_URL!.git"
+    )
+) else (
+    REM 转换为 SSH URL
+    echo !REPO_URL! | findstr /c:"https://" >nul
+    if not errorlevel 1 (
+        set "REPO_URL_TMP=!REPO_URL:https://=!"
+        set "REPO_URL_TMP=!REPO_URL_TMP:.git=!"
+        for /f "tokens=1,2,3,* delims=/" %%a in ("!REPO_URL_TMP!") do (
+            set "REPO_HOST=%%a"
+            set "REPO_USER=%%b"
+            set "REPO_NAME=%%c"
+        )
+        if defined REPO_HOST if defined REPO_USER if defined REPO_NAME (
+            set "REPO_URL=git@!REPO_HOST!:!REPO_USER!/!REPO_NAME!"
+        )
     )
 )
 
@@ -262,19 +301,24 @@ if not exist "!WORK_DIR!" (
 
 cd /d "!WORK_DIR!"
 
+REM 初始化或更新 remote
 if not exist ".git" (
     echo !T_IGIT!
-    git init
+    git init -q
     git remote add origin "!REPO_URL!"
 ) else (
-    git remote set-url origin "!REPO_URL!" 2>nul || git remote add origin "!REPO_URL!"
+    REM 仅在 URL 变化时更新 remote
+    for /f "delims=" %%i in ('git remote get-url origin 2^>nul') do set "CURRENT_URL=%%i"
+    if not "!CURRENT_URL!"=="!REPO_URL!" (
+        git remote set-url origin "!REPO_URL!" 2>nul || git remote add origin "!REPO_URL!"
+    )
 )
 
-echo !T_FETCH!
-git fetch origin "!BRANCH!" --depth=1 --no-tags 2>nul
+REM 配置 git 优化选项
+git config core.autocrlf false
+git config gc.auto 0 2>nul
 
 echo !T_AFILES!
-git config core.autocrlf false
 git add -A
 
 REM 检查是否有变更，无变更则跳过提交和推送
@@ -285,10 +329,13 @@ if not errorlevel 1 (
 )
 
 echo !T_COMMIT!
-git commit -m "!MSG!" 2>nul
+git commit -m "!MSG!" --quiet 2>nul
 if errorlevel 1 (
     echo !T_NOCOMMIT!
 )
+
+echo !T_FETCH!
+git fetch origin "!BRANCH!" --depth=1 --no-tags --quiet 2>nul
 
 echo !T_PUSHING!
 git push -u origin "HEAD:!BRANCH!" --force --quiet
