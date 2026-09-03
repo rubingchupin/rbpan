@@ -5,41 +5,85 @@ setlocal enabledelayedexpansion
 set "ROOT=%~dp0"
 set "ROOT_NODE=%ROOT:\=/%"
 
-for /f "delims=" %%i in ('node "!ROOT_NODE!cli.js" root.pushBanner') do set "T_BANNER=%%i"
-for /f "delims=" %%i in ('node "!ROOT_NODE!cli.js" root.buildPrompt') do set "T_BPROMPT=%%i"
-for /f "delims=" %%i in ('node "!ROOT_NODE!cli.js" root.buildLabel') do set "T_BLABEL=%%i"
-for /f "delims=" %%i in ('node "!ROOT_NODE!cli.js" root.buildServer') do set "T_BSERVER=%%i"
-for /f "delims=" %%i in ('node "!ROOT_NODE!cli.js" root.buildClient') do set "T_BCLIENT=%%i"
-for /f "delims=" %%i in ('node "!ROOT_NODE!cli.js" root.buildComplete') do set "T_BCOMPLETE=%%i"
-for /f "delims=" %%i in ('node "!ROOT_NODE!cli.js" root.modeSelect') do set "T_MSELECT=%%i"
-for /f "delims=" %%i in ('node "!ROOT_NODE!cli.js" root.modeFull') do set "T_MFULL=%%i"
-for /f "delims=" %%i in ('node "!ROOT_NODE!cli.js" root.modeServer') do set "T_MSERVER=%%i"
-for /f "delims=" %%i in ('node "!ROOT_NODE!cli.js" root.modeClient') do set "T_MCLIENT=%%i"
-for /f "delims=" %%i in ('node "!ROOT_NODE!cli.js" root.modeAll') do set "T_MALL=%%i"
-for /f "delims=" %%i in ('node "!ROOT_NODE!cli.js" root.modeQuit') do set "T_MQUIT=%%i"
-for /f "delims=" %%i in ('node "!ROOT_NODE!cli.js" root.enterOption') do set "T_EOPT=%%i"
-for /f "delims=" %%i in ('node "!ROOT_NODE!cli.js" root.invalidOption') do set "T_INVALID=%%i"
-for /f "delims=" %%i in ('node "!ROOT_NODE!cli.js" root.fullPush') do set "T_FULL=%%i"
-for /f "delims=" %%i in ('node "!ROOT_NODE!cli.js" root.serverPush') do set "T_SERVER=%%i"
-for /f "delims=" %%i in ('node "!ROOT_NODE!cli.js" root.clientPush') do set "T_CLIENT=%%i"
-for /f "delims=" %%i in ('node "!ROOT_NODE!cli.js" root.repo') do set "T_REPO=%%i"
-for /f "delims=" %%i in ('node "!ROOT_NODE!cli.js" root.branch') do set "T_BRANCH=%%i"
-for /f "delims=" %%i in ('node "!ROOT_NODE!cli.js" root.enterBranch') do set "T_EBRANCH=%%i"
-for /f "delims=" %%i in ('node "!ROOT_NODE!cli.js" root.usingBranch') do set "T_UBRANCH=%%i"
-for /f "delims=" %%i in ('node "!ROOT_NODE!cli.js" root.gitNotFound') do set "T_GITNF=%%i"
-for /f "delims=" %%i in ('node "!ROOT_NODE!cli.js" root.dirNotFound') do set "T_DIRNF=%%i"
-for /f "delims=" %%i in ('node "!ROOT_NODE!cli.js" root.initGit') do set "T_IGIT=%%i"
-for /f "delims=" %%i in ('node "!ROOT_NODE!cli.js" root.fetching') do set "T_FETCH=%%i"
-for /f "delims=" %%i in ('node "!ROOT_NODE!cli.js" root.addingFiles') do set "T_AFILES=%%i"
-for /f "delims=" %%i in ('node "!ROOT_NODE!cli.js" root.committing') do set "T_COMMIT=%%i"
-for /f "delims=" %%i in ('node "!ROOT_NODE!cli.js" root.nothingToCommit') do set "T_NOCOMMIT=%%i"
-for /f "delims=" %%i in ('node "!ROOT_NODE!cli.js" root.commitOk') do set "T_COMMITOK=%%i"
-for /f "delims=" %%i in ('node "!ROOT_NODE!cli.js" root.pushing') do set "T_PUSHING=%%i"
-for /f "delims=" %%i in ('node "!ROOT_NODE!cli.js" root.pushFailed') do set "T_PFAIL=%%i"
-for /f "delims=" %%i in ('node "!ROOT_NODE!cli.js" root.pushComplete') do set "T_POK=%%i"
-for /f "delims=" %%i in ('node "!ROOT_NODE!cli.js" root.allDone') do set "T_DONE=%%i"
-for /f "delims=" %%i in ('node "!ROOT_NODE!cli.js" root.buildFailed') do set "T_BFAIL=%%i"
+REM 获取 CLI 语言设置
+for /f "delims=" %%i in ('node -e "try{console.log(require('./git-config').cliLang||'zh-CN');}catch(e){console.log('zh-CN');}"') do set "CLI_LANG=%%i"
 
+REM 根据语言设置翻译
+if "!CLI_LANG!"=="zh-CN" (
+  set "T_BANNER=rbpan - Git 推送"
+  set "T_BPROMPT=推送前是否先构建？"
+  set "T_BLABEL=构建中"
+  set "T_BSERVER=正在构建服务端（生成分片）..."
+  set "T_BCLIENT=正在构建客户端（静态站点）..."
+  set "T_BCOMPLETE=构建完成！"
+  set "T_MSELECT=选择推送模式"
+  set "T_MFULL=完整项目（源代码）"
+  set "T_MSERVER=服务端输出（分片文件）"
+  set "T_MCLIENT=客户端输出（静态站点）"
+  set "T_MALL=全部三个仓库"
+  set "T_MQUIT=退出"
+  set "T_EOPT=请输入选项"
+  set "T_INVALID=无效选项"
+  set "T_FULL=完整项目推送"
+  set "T_SERVER=服务端输出推送"
+  set "T_CLIENT=客户端输出推送"
+  set "T_REPO=仓库"
+  set "T_BRANCH=分支"
+  set "T_EBRANCH=请输入分支名"
+  set "T_UBRANCH=使用分支"
+  set "T_GITNF=未找到 Git 或 Git 不在 PATH 中"
+  set "T_DIRNF=目录不存在："
+  set "T_IGIT=正在初始化 Git 仓库..."
+  set "T_FETCH=正在获取最新版本..."
+  set "T_AFILES=正在添加文件..."
+  set "T_COMMIT=正在提交..."
+  set "T_NOCOMMIT=没有需要提交的内容"
+  set "T_COMMITOK=提交成功"
+  set "T_NOCHANGES=没有文件变更，跳过推送"
+  set "T_PUSHING=正在推送..."
+  set "T_PFAIL=推送失败"
+  set "T_POK=推送完成"
+  set "T_DONE=全部完成！"
+  set "T_BFAIL=失败"
+) else (
+  set "T_BANNER=rbpan - Git Push"
+  set "T_BPROMPT=Run build before push?"
+  set "T_BLABEL=Building"
+  set "T_BSERVER=Building Server (generating chunks)..."
+  set "T_BCLIENT=Building Client (generating static site)..."
+  set "T_BCOMPLETE=Build Complete!"
+  set "T_MSELECT=Select push mode"
+  set "T_MFULL=Full project (source code)"
+  set "T_MSERVER=Server output (chunks)"
+  set "T_MCLIENT=Client output (static site)"
+  set "T_MALL=All three repos"
+  set "T_MQUIT=Quit"
+  set "T_EOPT=Enter option"
+  set "T_INVALID=Invalid option"
+  set "T_FULL=Full Project Push"
+  set "T_SERVER=Server Output Push"
+  set "T_CLIENT=Client Output Push"
+  set "T_REPO=Repo"
+  set "T_BRANCH=Branch"
+  set "T_EBRANCH=Enter branch"
+  set "T_UBRANCH=Using branch"
+  set "T_GITNF=Git not found or not in PATH"
+  set "T_DIRNF=Directory not found:"
+  set "T_IGIT=Initializing Git repository..."
+  set "T_FETCH=Fetching latest..."
+  set "T_AFILES=Adding files..."
+  set "T_COMMIT=Committing..."
+  set "T_NOCOMMIT=Nothing to commit"
+  set "T_COMMITOK=Commit OK"
+  set "T_NOCHANGES=No file changes, skipping push"
+  set "T_PUSHING=Pushing..."
+  set "T_PFAIL=Push failed"
+  set "T_POK=Push completed"
+  set "T_DONE=All done!"
+  set "T_BFAIL=FAILED"
+)
+
+REM 输出 banner
 echo ============================================================
 echo   !T_BANNER!
 echo ============================================================
@@ -203,14 +247,16 @@ if not exist "!WORK_DIR!" (
 
 cd /d "!WORK_DIR!"
 
-REM 重新初始化仓库，避免历史累积
-if exist ".git" (
-    rmdir /s /q .git
+if not exist ".git" (
+    echo !T_IGIT!
+    git init
+    git remote add origin "!REPO_URL!"
+) else (
+    git remote set-url origin "!REPO_URL!" 2>nul || git remote add origin "!REPO_URL!"
 )
 
-echo !T_IGIT!
-git init
-git remote add origin "!REPO_URL!"
+echo !T_FETCH!
+git fetch origin "!BRANCH!" --depth=1 --no-tags 2>nul
 
 echo !T_AFILES!
 git config core.autocrlf false
@@ -230,7 +276,7 @@ if errorlevel 1 (
 )
 
 echo !T_PUSHING!
-git push -u origin "HEAD:!BRANCH!" --force --no-verify --quiet 2>nul
+git push -u origin "HEAD:!BRANCH!" --force --quiet
 if errorlevel 1 (
     echo !T_PFAIL!
     pause

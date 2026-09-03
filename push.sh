@@ -2,44 +2,28 @@
 set -e
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
+LANG_FILE="/tmp/rbpan_lang_$$.sh"
 
-t() { node "$ROOT/cli.js" "$@"; }
+# 一次性加载所有翻译到临时文件
+node -e "
+const path = require('path');
+const fs = require('fs');
+const lang = (() => { try { return require('./git-config').cliLang || 'zh-CN'; } catch(e) { return 'zh-CN'; } })();
+let strings = {};
+try { strings = JSON.parse(fs.readFileSync(path.join('$ROOT', 'server', 'languages', lang + '.json'), 'utf-8')); } catch(e) {}
+const root = strings.root || {};
+const lines = Object.entries(root).map(([k, v]) => {
+  const safe = String(v).replace(/\\\\/g, '\\\\\\\\').replace(/'/g, \"'\\\\''\").replace(/\\$/g, '\\\\$');
+  return 'T_' + k.toUpperCase() + '=\'' + safe + '\'';
+});
+fs.writeFileSync('$LANG_FILE', lines.join('\\n') + '\\n');
+"
 
-T_BANNER=$(t root.pushBanner)
-T_BPROMPT=$(t root.buildPrompt)
-T_BLABEL=$(t root.buildLabel)
-T_BSERVER=$(t root.buildServer)
-T_BCLIENT=$(t root.buildClient)
-T_BCOMPLETE=$(t root.buildComplete)
-T_MSELECT=$(t root.modeSelect)
-T_MFULL=$(t root.modeFull)
-T_MSERVER=$(t root.modeServer)
-T_MCLIENT=$(t root.modeClient)
-T_MALL=$(t root.modeAll)
-T_MQUIT=$(t root.modeQuit)
-T_EOPT=$(t root.enterOption)
-T_INVALID=$(t root.invalidOption)
-T_FULL=$(t root.fullPush)
-T_SERVER=$(t root.serverPush)
-T_CLIENT=$(t root.clientPush)
-T_REPO=$(t root.repo)
-T_BRANCH=$(t root.branch)
-T_EBRANCH=$(t root.enterBranch)
-T_UBRANCH=$(t root.usingBranch)
-T_GITNF=$(t root.gitNotFound)
-T_DIRNF=$(t root.dirNotFound)
-T_IGIT=$(t root.initGit)
-T_FETCH=$(t root.fetching)
-T_AFILES=$(t root.addingFiles)
-T_COMMIT=$(t root.committing)
-T_NOCOMMIT=$(t root.nothingToCommit)
-T_COMMITOK=$(t root.commitOk)
-T_NOCHANGES=$(t root.noChanges)
-T_PUSHING=$(t root.pushing)
-T_PFAIL=$(t root.pushFailed)
-T_POK=$(t root.pushComplete)
-T_DONE=$(t root.allDone)
+# 加载翻译
+source "$LANG_FILE"
+rm -f "$LANG_FILE"
 
+# 输出 banner
 echo "============================================================"
 echo "  $T_BANNER"
 echo "============================================================"
@@ -181,14 +165,16 @@ git_push() {
 
   cd "$work_dir"
 
-  # 重新初始化仓库，避免历史累积
-  if [ -d ".git" ]; then
-    rm -rf .git
+  if [ ! -d ".git" ]; then
+    echo "$T_IGIT"
+    git init
+    git remote add origin "$repo_url"
+  else
+    git remote set-url origin "$repo_url" 2>/dev/null || git remote add origin "$repo_url"
   fi
-  
-  echo "$T_IGIT"
-  git init
-  git remote add origin "$repo_url"
+
+  echo "$T_FETCH"
+  git fetch origin "$branch" --depth=1 --no-tags 2>/dev/null || true
 
   echo "$T_AFILES"
   git config core.autocrlf false
@@ -204,8 +190,7 @@ git_push() {
   git commit -m "$msg" 2>/dev/null || echo "$T_NOCOMMIT"
 
   echo "$T_PUSHING"
-  # 直接推送，不 fetch 远程数据，让 git 自动计算差异
-  git push -u origin "HEAD:$branch" --force --no-verify --quiet 2>&1 | grep -v "remote:" || true
+  git push -u origin "HEAD:$branch" --force --quiet
 
   echo "$T_POK  $T_REPO: $repo_url  $T_BRANCH: $branch"
 }

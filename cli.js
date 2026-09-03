@@ -39,7 +39,10 @@ function __(key, replacements) {
 }
 
 const key = process.argv[2];
-if (key) {
+if (key === '--all') {
+  // 输出所有 root 翻译为 JSON
+  process.stdout.write(JSON.stringify(strings.root || {}));
+} else if (key) {
   const replacements = {};
   for (let i = 3; i < process.argv.length; i += 2) {
     replacements[process.argv[i]] = process.argv[i + 1] || '';
@@ -47,4 +50,5 @@ if (key) {
   process.stdout.write(__(key, replacements));
 } else {
   console.log('Usage: node cli.js <key> [replacements...]');
+  console.log('       node cli.js --all');
 }

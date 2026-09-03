@@ -23,4 +23,4 @@ git:
   repoUrl: 'https://github.com/rubingchupin/rbpan.git'
   repoBranch: 'server'
   autoPush: false
-  commitMessage: 'Update: rbpan files'
+  commitMessage: 'Update Files'

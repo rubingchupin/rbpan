@@ -95,4 +95,4 @@ deploy:
   enabled: false
   repoUrl: 'https://github.com/rubingchupin/rbpan.git'
   repoBranch: 'client'
-  commitMessage: 'Deploy: rbpan Client'
+  commitMessage: 'Update Files'
