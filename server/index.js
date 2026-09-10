@@ -11,6 +11,7 @@ const { generateOutput } = require('./lib/generator');
 const { __ } = require('./lib/i18n');
 
 async function main() {
+  const startTime = Date.now();
   console.log(__('server.banner') + '\n');
 
   const inputDir = path.resolve(config.inputDir);
@@ -47,14 +48,15 @@ async function main() {
   };
 
   const manifestPath = path.join(outputDir, 'manifest.json');
-  fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2), 'utf-8');
+  fs.writeFileSync(manifestPath, JSON.stringify(manifest), 'utf-8');
   console.log(`\n${__('server.manifestGenerated')}: ${manifestPath}`);
 
   const headersPath = path.join(outputDir, '_headers');
   fs.writeFileSync(headersPath, '/*\n  Access-Control-Allow-Origin: *\n', 'utf-8');
 
+  const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
   console.log('\n════════════════════════════════════════════');
-  console.log(`  ${__('server.processingComplete')}`);
+  console.log(`  ${__('server.processingComplete')}  (${elapsed}s)`);
   console.log('════════════════════════════════════════════');
   console.log(`\n${__('server.outputDirLabel')}: ${outputDir}`);
   console.log(__('server.deployHint'));
@@ -76,7 +78,11 @@ async function pushToGit(outputDir) {
     execSync('git init', { cwd: outputDir, stdio: 'inherit' });
 
     console.log(`${__('server.addingRemote')}: ${config.git.repoUrl}`);
-    execSync(`git remote add origin ${config.git.repoUrl}`, { cwd: outputDir, stdio: 'inherit' });
+    try {
+      execSync(`git remote add origin ${config.git.repoUrl}`, { cwd: outputDir, stdio: 'inherit' });
+    } catch {
+      execSync(`git remote set-url origin ${config.git.repoUrl}`, { cwd: outputDir, stdio: 'inherit' });
+    }
 
     console.log(__('server.addingFiles'));
     execSync('git config core.autocrlf false', { cwd: outputDir, stdio: 'inherit' });
@@ -86,6 +92,7 @@ async function pushToGit(outputDir) {
     try {
       execSync(`git commit --allow-empty -m "${config.git.commitMessage}"`, { cwd: outputDir, stdio: 'inherit' });
     } catch {
+      console.log(__('server.nothingToCommit') || '没有需要提交的内容');
     }
 
     console.log(__('server.pushing'));

@@ -87,6 +87,11 @@ backdropBlur: 8
 # 启用毛玻璃 / 半透明背景效果
 beautify: true
 
+# 旧版浏览器兼容（IE11 等）
+# true = 生成 IE 专用简化 CSS + polyfills（增加约 210KB），现代浏览器不受影响
+# false = 禁用 IE 兼容（减小体积，推荐用于纯现代浏览器环境）
+ieCompat: false
+
 # ===== 插件 =====
 plugins: []
 

@@ -1146,6 +1146,12 @@ body::before
   font-size 12px
   color var(--text-muted)
 
+.modal-actions
+  display flex
+  gap 10px
+  margin-top 18px
+  justify-content center
+
 /* ---- ANNOUNCEMENT MODAL ---- */
 .announcement-modal
   position fixed
@@ -1926,3 +1932,133 @@ body::before
     --lang-btn-font-size: 0.75rem
     --lang-dropdown-min-width: 10rem
     --lang-item-padding: 0.625rem 0.875rem
+
+/* ==============================================
+   PERFORMANCE MODE — 低端设备关闭动效和模糊
+   ============================================== */
+[data-reduced-motion]
+  &, *
+    animation none !important
+    animation-duration 0s !important
+    animation-delay 0s !important
+    transition none !important
+    transition-duration 0s !important
+    transition-delay 0s !important
+  --glass-blur 0px
+  --bar-blur 0px
+  --glass-saturate 100%
+  --surface rgba(255,255,255,0.95) !important
+  --surface-strong rgba(255,255,255,1) !important
+  --surface-weak rgba(241,245,249,0.92) !important
+  --surface-hover rgba(255,255,255,1) !important
+  --bar-bg rgba(255,255,255,0.92) !important
+  --bar-item-bg rgba(255,255,255,0.88) !important
+  --file-bg rgba(241,245,249,0.9) !important
+  --file-hover rgba(248,250,252,0.95) !important
+  .header-bar
+  .settings-panel
+  .settings-overlay
+  .preview-modal
+  .search-box
+  .glass-card
+  .glass-surface
+  .file-card
+  .folder-card
+  .dropdown-menu
+  .lang-dropdown
+  .context-menu
+  .modal-backdrop
+  .modal-content
+  .toolbar
+  .breadcrumb
+  .announcement-banner
+    backdrop-filter none !important
+    -webkit-backdrop-filter none !important
+
+  [data-theme="dark"] &
+    --surface rgba(30,41,59,0.95) !important
+    --surface-strong rgba(30,41,59,1) !important
+    --surface-weak rgba(51,65,85,0.92) !important
+    --surface-hover rgba(40,53,72,0.95) !important
+    --bar-bg rgba(15,23,42,0.92) !important
+    --bar-item-bg rgba(30,41,59,0.88) !important
+    --file-bg rgba(51,65,85,0.9) !important
+    --file-hover rgba(40,53,72,0.95) !important
+
+/* ==============================================
+   @supports 回退 — 不支持 backdrop-filter 的浏览器
+   ============================================== */
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px)))
+  .header-bar
+  .lang-dropdown
+  .breadcrumb-nav
+  .toolbar
+  .file-card
+  .file-table
+  .readme-box
+  .modal
+  .announcement-dialog
+  .announcement-overlay
+  .notification-toast
+  .preview-modal
+  .settings-panel
+  .settings-overlay
+  .page-loader-bg
+    backdrop-filter none !important
+    -webkit-backdrop-filter none !important
+
+  .header-bar
+    background rgba(255,255,255,0.95) !important
+    border-bottom 1px solid rgba(200,205,220,0.6) !important
+
+  .lang-dropdown
+    background rgba(255,255,255,0.98) !important
+
+  .breadcrumb-nav
+  .toolbar
+  .file-card
+  .readme-box
+    background rgba(255,255,255,0.95) !important
+
+  .file-table
+    background rgba(255,255,255,0.95) !important
+
+  .modal
+  .announcement-dialog
+  .notification-toast
+  .preview-modal
+    background rgba(255,255,255,1) !important
+
+  .settings-panel
+    background rgba(255,255,255,1) !important
+
+  .settings-overlay
+  .announcement-overlay
+  .modal-overlay
+    background rgba(0,0,0,0.6) !important
+
+  [data-theme="dark"] &
+    .header-bar
+      background rgba(15,23,42,0.95) !important
+      border-bottom 1px solid rgba(51,65,85,0.6) !important
+
+    .lang-dropdown
+      background rgba(30,41,59,0.98) !important
+
+    .breadcrumb-nav
+    .toolbar
+    .file-card
+    .readme-box
+      background rgba(30,41,59,0.95) !important
+
+    .file-table
+      background rgba(30,41,59,0.95) !important
+
+    .modal
+    .announcement-dialog
+    .notification-toast
+    .preview-modal
+      background rgba(30,41,59,1) !important
+
+    .settings-panel
+      background rgba(30,41,59,1) !important

@@ -1,5 +1,23 @@
 const { createApp } = Vue;
 
+function safeStorage() {
+  try {
+    const key = '__rbpan_test__';
+    localStorage.setItem(key, '1');
+    localStorage.removeItem(key);
+    return localStorage;
+  } catch (e) {
+    const store = {};
+    return {
+      getItem: function(k) { return store[k] || null; },
+      setItem: function(k, v) { store[k] = String(v); },
+      removeItem: function(k) { delete store[k]; },
+    };
+  }
+}
+
+const storage = safeStorage();
+
 marked.setOptions({
   gfm: true,
   breaks: true,
@@ -16,6 +34,20 @@ const PREVIEW_HTML_EXTS = ['html', 'htm', 'xhtml'];
 const PREVIEW_DOCX_EXTS = ['docx'];
 const PREVIEW_XLSX_EXTS = ['xlsx', 'xls'];
 const PREVIEW_PPTX_EXTS = ['pptx'];
+
+const PREVIEWABLE_EXTS = new Set([
+  ...PREVIEW_MD_EXTS, ...PREVIEW_TEXT_EXTS, ...PREVIEW_CODE_EXTS,
+  ...PREVIEW_IMAGE_EXTS, ...PREVIEW_AUDIO_EXTS, ...PREVIEW_VIDEO_EXTS,
+  ...PREVIEW_PDF_EXTS, ...PREVIEW_HTML_EXTS, ...PREVIEW_DOCX_EXTS,
+  ...PREVIEW_XLSX_EXTS, ...PREVIEW_PPTX_EXTS,
+]);
+
+const ICON_MD_EXTS = new Set(PREVIEW_MD_EXTS);
+const ICON_CODE_EXTS = new Set(PREVIEW_CODE_EXTS);
+const ICON_IMAGE_EXTS = new Set(PREVIEW_IMAGE_EXTS);
+const ICON_AUDIO_EXTS = new Set(PREVIEW_AUDIO_EXTS);
+const ICON_VIDEO_EXTS = new Set(PREVIEW_VIDEO_EXTS);
+const ICON_PDF_EXTS = new Set(PREVIEW_PDF_EXTS);
 
 const EXT_LANG_MAP = {
   js: 'javascript', mjs: 'javascript', cjs: 'javascript',
@@ -82,6 +114,8 @@ const app = createApp({
       error: false,
       errorMsg: '',
       searchQuery: '',
+      debouncedSearchQuery: '',
+      searchTimer: null,
       viewMode: 'list',
       currentTheme: APP_CONFIG.defaultTheme || 'light',
       currentLang: APP_CONFIG.defaultLang || 'zh-CN',
@@ -113,9 +147,11 @@ const app = createApp({
       downloadSpeed: '',
       downloadDetail: '',
       downloadCancellable: true,
+      downloadPaused: false,
       downloader: null,
       hashVerifier: null,
       currentDownloadCtrl: null,
+      currentDownloadId: null,
 
       settingsOpen: false,
       langDropdownOpen: false,
@@ -123,6 +159,8 @@ const app = createApp({
       showFileCount: true,
       showGalleryThumb: true,
       rememberLastImage: false,
+      reducedMotion: false,
+      totalFileCount: 0,
     };
   },
 
@@ -141,7 +179,7 @@ const app = createApp({
     },
 
     filteredFiles() {
-      const q = this.searchQuery.trim().toLowerCase();
+      const q = this.debouncedSearchQuery.trim().toLowerCase();
       if (!q) return this.currentFiles;
       return this.currentFiles.filter(f =>
         f.name.toLowerCase().includes(q)
@@ -161,7 +199,7 @@ const app = createApp({
 
     fileCountText() {
       if (!this.manifest) return '';
-      const count = this.countFilesRecursive(this.manifest.files);
+      const count = this.totalFileCount;
       return count + ' ' + (this.currentLang === 'zh-CN' || this.currentLang === 'zh-TW' ? '个文件' : ' files');
     },
 
@@ -171,7 +209,30 @@ const app = createApp({
     },
   },
 
+  watch: {
+    searchQuery(val) {
+      if (this.searchTimer) clearTimeout(this.searchTimer);
+      this.searchTimer = setTimeout(() => {
+        this.debouncedSearchQuery = val;
+      }, 300);
+    },
+  },
+
   methods: {
+    traverseAndTag(files) {
+      let count = 0;
+      for (const f of files) {
+        f._icon = this.getFileIcon(f);
+        f._ext = f.type === 'file' ? this.getFileExtension(f.name).toLowerCase() : '';
+        if (f.type === 'file') {
+          count++;
+        } else if (f.children) {
+          count += this.traverseAndTag(f.children);
+        }
+      }
+      return count;
+    },
+
     getFilesAtPath(targetPath) {
       if (!this.manifest.files) return [];
       if (!targetPath) return this.manifest.files;
@@ -184,15 +245,6 @@ const app = createApp({
         current = found.children || [];
       }
       return current;
-    },
-
-    countFilesRecursive(files) {
-      let count = 0;
-      for (const f of files) {
-        if (f.type === 'file') count++;
-        else if (f.children) count += this.countFilesRecursive(f.children);
-      }
-      return count;
     },
 
     navigateTo(path) {
@@ -215,12 +267,12 @@ const app = createApp({
     getFileIcon(file) {
       if (file.type === 'folder') return 'folder';
       const ext = this.getFileExtension(file.name).toLowerCase();
-      if (PREVIEW_MD_EXTS.includes(ext)) return 'file-md';
-      if (PREVIEW_CODE_EXTS.includes(ext)) return 'file-code';
-      if (PREVIEW_IMAGE_EXTS.includes(ext)) return 'file-img';
-      if (PREVIEW_AUDIO_EXTS.includes(ext)) return 'file-audio';
-      if (PREVIEW_VIDEO_EXTS.includes(ext)) return 'file-video';
-      if (PREVIEW_PDF_EXTS.includes(ext)) return 'file-pdf';
+      if (ICON_MD_EXTS.has(ext)) return 'file-md';
+      if (ICON_CODE_EXTS.has(ext)) return 'file-code';
+      if (ICON_IMAGE_EXTS.has(ext)) return 'file-img';
+      if (ICON_AUDIO_EXTS.has(ext)) return 'file-audio';
+      if (ICON_VIDEO_EXTS.has(ext)) return 'file-video';
+      if (ICON_PDF_EXTS.has(ext)) return 'file-pdf';
       return 'file';
     },
 
@@ -231,8 +283,8 @@ const app = createApp({
 
     isPreviewable(file) {
       if (file.type === 'folder') return false;
-      const ext = this.getFileExtension(file.name).toLowerCase();
-      return PREVIEW_MD_EXTS.includes(ext) || PREVIEW_CODE_EXTS.includes(ext) || PREVIEW_IMAGE_EXTS.includes(ext) || PREVIEW_TEXT_EXTS.includes(ext) || PREVIEW_AUDIO_EXTS.includes(ext) || PREVIEW_VIDEO_EXTS.includes(ext) || PREVIEW_PDF_EXTS.includes(ext) || PREVIEW_HTML_EXTS.includes(ext) || PREVIEW_DOCX_EXTS.includes(ext) || PREVIEW_XLSX_EXTS.includes(ext) || PREVIEW_PPTX_EXTS.includes(ext);
+      const ext = file._ext || this.getFileExtension(file.name).toLowerCase();
+      return PREVIEWABLE_EXTS.has(ext);
     },
 
     formatSize(bytes) {
@@ -289,6 +341,7 @@ const app = createApp({
             const data = await response.json();
             console.log('[rbpan] manifest loaded successfully, files:', data?.files?.length || 0);
             this.manifest = data;
+            this.totalFileCount = this.traverseAndTag(data.files || []);
             this.loading = false;
             if (!this.initFromUrl()) {
               this.loadReadme();
@@ -514,12 +567,13 @@ const app = createApp({
     async getPreviewBlob(file) {
       const baseUrl = this.manifest.baseUrl || this.manifestUrl.replace(/\/manifest\.json$/, '');
       const chunkExtension = this.manifest.chunkExtension || 'rbpan';
+      const threads = this.getThreads();
 
       if (file.chunks > 1) {
         if (!this.downloader) {
           this.downloader = new ChunkDownloader();
         }
-        const { blob } = await this.downloader.downloadFile(file, baseUrl, chunkExtension, 6, (info) => {
+        const { blob } = await this.downloader.downloadFile(file, baseUrl, chunkExtension, threads, (info) => {
           this.previewContent = '<p class="preview-progress">' + (this.t.preview?.loading || '加载中...') + ' ' + info.progress + '%</p>';
         });
         return blob;
@@ -531,6 +585,10 @@ const app = createApp({
       return await resp.blob();
     },
 
+    getThreads() {
+      return APP_CONFIG.downloadThreads > 0 ? APP_CONFIG.downloadThreads : 6;
+    },
+
     streamVideoPreview(file) {
       const ext = this.getFileExtension(file.name).toLowerCase();
       const mimeTypes = {
@@ -539,113 +597,133 @@ const app = createApp({
         m4v: 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"',
         ogv: 'video/ogg; codecs="theora, vorbis"',
       };
-
       const mime = mimeTypes[ext];
-      if (!mime || !window.MediaSource) {
-        this._fallbackVideoPreview(file);
+      this._streamMedia(file, mime);
+    },
+
+    streamAudioPreview(file) {
+      const ext = this.getFileExtension(file.name).toLowerCase();
+      const mimeTypes = {
+        mp3: 'audio/mpeg', wav: 'audio/wav', ogg: 'audio/ogg',
+        flac: 'audio/flac', m4a: 'audio/mp4; codecs="mp4a.40.2"',
+        aac: 'audio/aac', opus: 'audio/ogg; codecs="opus"',
+        weba: 'audio/webm; codecs="opus"', wma: 'audio/x-ms-wma',
+      };
+      const mime = mimeTypes[ext];
+      this._streamMedia(file, mime);
+    },
+
+    async _streamMedia(file, mime) {
+      const baseUrl = (this.manifest.baseUrl || this.manifestUrl.replace(/\/manifest\.json$/, '')).replace(/\/+$/, '');
+      const dirPath = file.path.substring(0, file.path.lastIndexOf('/') + 1);
+      const chunkUrls = file.files.map(f => baseUrl + '/' + dirPath + f);
+      const maxChunkSize = Math.ceil(file.size / file.chunks);
+
+      if (this._swReady) {
+        await this._swReady;
+        const streamId = String(++this._streamIdCounter);
+        if (navigator.serviceWorker.controller) {
+          navigator.serviceWorker.controller.postMessage({
+            type: 'rbpan-stream-init',
+            id: streamId,
+            chunkUrls: chunkUrls,
+            maxChunkSize: maxChunkSize,
+            totalSize: file.size,
+            mime: mime,
+          });
+        }
+        this._activeStreams.push(streamId);
+        this._videoCleanup = () => this._closeStream(streamId);
+        this.previewRawUrl = '/__rbpan_stream/' + streamId;
+        this.previewContent = '';
+        this.previewLoading = false;
         return;
       }
 
-      const baseUrl = (this.manifest.baseUrl || this.manifestUrl.replace(/\/manifest\.json$/, '')).replace(/\/+$/, '');
-      const chunkExtension = this.manifest.chunkExtension || 'rbpan';
-
-      const dirPath = file.path.substring(0, file.path.lastIndexOf('/') + 1);
-      const chunkUrls = file.files.map(f => baseUrl + '/' + dirPath + f);
-
-      const mediaSource = new MediaSource();
-      this.previewRawUrl = URL.createObjectURL(mediaSource);
-
-      let sourceBuffer = null;
-      let pendingChunks = [];
-      let currentChunk = 0;
-      let aborted = false;
       const totalChunks = chunkUrls.length;
-      const downloadQueue = chunkUrls.map((url, i) => ({ index: i, url }));
+      const threads = this.getThreads();
+      const totalSize = file.size;
 
-      this._videoCleanup = () => {
-        aborted = true;
-        if (mediaSource.readyState === 'open') {
-          try { mediaSource.endOfStream(); } catch (e) {}
-        }
+      const chunks = new Array(totalChunks);
+      let loaded = 0;
+      let aborted = false;
+
+      this._videoCleanup = () => { aborted = true; };
+
+      const updateProgress = () => {
+        const pct = totalSize ? Math.round((loaded / totalSize) * 100) : 0;
+        this.previewContent = '<p class="preview-progress">' + (this.t.preview?.loading || '加载中...') + ' ' + pct + '%</p>';
       };
 
-      const downloadChunk = async (url) => {
-        const resp = await fetch(url);
-        if (!resp.ok) throw new Error('HTTP ' + resp.status);
-        return await resp.arrayBuffer();
-      };
-
-      const appendNextChunk = () => {
-        if (aborted) return;
-        while (pendingChunks.length > 0 && !sourceBuffer.updating) {
-          const chunk = pendingChunks.shift();
+      const downloadWorker = async () => {
+        const queue = chunkUrls.map((url, i) => ({ index: i, url }));
+        while (queue.length > 0 && !aborted) {
+          const task = queue.shift();
           try {
-            sourceBuffer.appendBuffer(chunk);
+            const resp = await fetch(task.url);
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            const buf = await resp.arrayBuffer();
+            if (aborted) return;
+            chunks[task.index] = new Uint8Array(buf);
+            loaded += buf.byteLength;
+            updateProgress();
           } catch (e) {
-            console.warn('MSE append error, falling back:', e);
-            this._fallbackVideoPreview(file);
+            aborted = true;
+            this.previewContent = '<p class="preview-error">' + (this.t.preview?.loadError || 'Failed to load file') + ': ' + e.message + '</p>';
+            this.previewLoading = false;
             return;
           }
         }
       };
 
-      const onSourceOpen = async () => {
-        try {
-          sourceBuffer = mediaSource.addSourceBuffer(mime);
-          sourceBuffer.mode = 'sequence';
-          sourceBuffer.addEventListener('updateend', () => {
-            appendNextChunk();
-            if (pendingChunks.length === 0 && currentChunk >= totalChunks && !sourceBuffer.updating) {
-              try { mediaSource.endOfStream(); } catch (e) {}
-            }
-          });
+      const workers = [];
+      for (let i = 0; i < Math.min(threads, totalChunks); i++) workers.push(downloadWorker());
+      await Promise.all(workers);
 
-          const downloadNext = async () => {
-            if (aborted) return;
-            const task = downloadQueue.shift();
-            if (!task) return;
-            try {
-              const buf = await downloadChunk(task.url);
-              if (aborted) return;
-              pendingChunks.push(new Uint8Array(buf));
-              currentChunk++;
-              appendNextChunk();
-              downloadNext();
-            } catch (e) {
-              console.warn('Video chunk download error:', e);
-              this._fallbackVideoPreview(file);
-            }
-          };
+      if (aborted) return;
 
-          const concurrent = Math.min(4, totalChunks);
-          for (let i = 0; i < concurrent; i++) {
-            downloadNext();
-          }
-        } catch (e) {
-          console.warn('MSE init error:', e);
-          this._fallbackVideoPreview(file);
-        }
-      };
-
-      mediaSource.addEventListener('sourceopen', onSourceOpen);
+      const url = URL.createObjectURL(new Blob(chunks));
+      this.previewRawUrl = url;
+      this.previewContent = '';
+      this.previewLoading = false;
     },
 
-    _fallbackVideoPreview(file) {
-      if (this._videoCleanup) {
-        this._videoCleanup();
-        this._videoCleanup = null;
-      }
-      if (this.previewRawUrl && this.previewRawUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(this.previewRawUrl);
-      }
-      this.previewLoading = true;
-      this.getPreviewBlob(file).then(blob => {
-        this.previewRawUrl = URL.createObjectURL(blob);
-        this.previewLoading = false;
-      }).catch(e => {
-        this.previewContent = '<p class="preview-error">' + (this.t.preview?.loadError || 'Failed to load file') + ': ' + e.message + '</p>';
-        this.previewLoading = false;
+    _registerSW() {
+      if (!('serviceWorker' in navigator) || !navigator.serviceWorker) return;
+      this._streamIdCounter = 0;
+      this._activeStreams = [];
+      this._swReady = new Promise((resolve) => {
+        try {
+          navigator.serviceWorker.register('sw.js', { scope: '/' })
+            .then((reg) => {
+              if (reg.active) { resolve(); return; }
+              const worker = reg.installing || reg.waiting;
+              if (worker) {
+                worker.addEventListener('statechange', () => {
+                  if (worker.state === 'activated') resolve();
+                });
+              } else {
+                resolve();
+              }
+              setTimeout(() => resolve(), 5000);
+            })
+            .catch(() => { this._swReady = null; resolve(); });
+        } catch (e) {
+          this._swReady = null;
+          resolve();
+        }
       });
+    },
+
+    _closeStream(streamId) {
+      const idx = this._activeStreams.indexOf(streamId);
+      if (idx >= 0) this._activeStreams.splice(idx, 1);
+      if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({
+          type: 'rbpan-stream-close',
+          id: streamId,
+        });
+      }
     },
 
     escapeHtml(str) {
@@ -675,6 +753,12 @@ const app = createApp({
             this.previewType = 'video';
             this.previewLoading = false;
             Vue.nextTick(() => this.streamVideoPreview(file));
+            return;
+          }
+          if (PREVIEW_AUDIO_EXTS.includes(ext) && file.chunks > 1) {
+            this.previewType = 'audio';
+            this.previewLoading = false;
+            Vue.nextTick(() => this.streamAudioPreview(file));
             return;
           }
           const blob = await this.getPreviewBlob(file);
@@ -721,7 +805,7 @@ const app = createApp({
           PREVIEW_CODE_EXTS.includes(ext) ||
           PREVIEW_TEXT_EXTS.includes(ext);
 
-        const canStream = file.chunks && file.chunks.length <= 1;
+        const canStream = file.chunks <= 1;
         if (isTextFile && canStream) {
           await this.streamPreviewFile(file, ext);
           return;
@@ -806,13 +890,8 @@ const app = createApp({
     },
 
     _getFileRawUrl(file) {
-      if (this.serverConfig.downloadMode === 'redirect') {
-        if (file.chunks && file.chunks.length > 1) {
-          return file.chunks[0].url;
-        }
-        return file.url;
-      }
-      return file.url;
+      const baseUrl = (this.manifest.baseUrl || this.manifestUrl.replace(/\/manifest\.json$/, '')).replace(/\/+$/, '');
+      return baseUrl + '/' + file.path;
     },
 
     async renderDocxPreviewFromBlob(blob) {
@@ -904,39 +983,69 @@ const app = createApp({
         this.hashVerifier = new HashVerifier();
       }
 
+      var resumeId = file.path;
+      this.currentDownloadId = resumeId;
+
       this.downloadModal = true;
       this.downloadFileName = file.name;
       this.downloadProgress = 0;
       this.downloadSpeed = '';
       this.downloadDetail = '';
       this.downloadCancellable = true;
+      this.downloadPaused = false;
       this.currentDownloadCtrl = null;
+
+      // 检查是否有可恢复的下载
+      var resumeState = await ResumeDB.load(resumeId);
+      if (resumeState && (resumeState.loaded || resumeState.downloadedChunks)) {
+        var loaded = resumeState.loaded || 0;
+        var totalChunks = 0;
+        if (resumeState.downloadedChunks) {
+          totalChunks = Object.keys(resumeState.downloadedChunks).length;
+        }
+        var continueDownload = confirm(
+          (this.t.download?.resumePrompt || 'An incomplete download was found ({loaded} downloaded). Continue?').replace('{loaded}', this.formatSize(loaded))
+        );
+        if (!continueDownload) {
+          await ResumeDB.remove(resumeId);
+          resumeState = null;
+        }
+      }
 
       RbpanPlugins.onDownloadStart(file);
 
-      const baseUrl = this.manifest.baseUrl || this.manifestUrl.replace(/\/manifest\.json$/, '');
-      const chunkExtension = this.manifest.chunkExtension || 'rbpan';
-      const threads = APP_CONFIG.downloadThreads !== undefined ? APP_CONFIG.downloadThreads : 6;
+      var baseUrl = this.manifest.baseUrl || this.manifestUrl.replace(/\/manifest\.json$/, '');
+      var chunkExtension = this.manifest.chunkExtension || 'rbpan';
+      var threads = this.getThreads();
+
+      var self = this;
 
       try {
-        const { blob } = await this.downloader.downloadFile(
+        var result = await this.downloader.downloadFile(
           file, baseUrl, chunkExtension, threads,
-          (info) => {
-            this.downloadProgress = info.progress;
-            this.downloadSpeed = this.formatSize(info.speed) + '/s';
+          function (info) {
+            self.downloadProgress = info.progress;
+            self.downloadSpeed = self.formatSize(info.speed) + '/s';
             if (info.totalChunks) {
-              const tpl = this.t.download?.chunkProgress || 'Chunk {done}/{total}';
-              this.downloadDetail = tpl.replace('{done}', info.chunk).replace('{total}', info.totalChunks);
+              var tpl = self.t.download?.chunkProgress || 'Chunk {done}/{total}';
+              self.downloadDetail = tpl.replace('{done}', info.chunk).replace('{total}', info.totalChunks);
             }
-          }
+            if (info.resumed) {
+              self.downloadDetail = (self.t.download?.resumed || 'Resumed from {pct}%').replace('{pct}', info.progress);
+            }
+          },
+          resumeId
         );
+        var blob = result.blob;
 
         this.downloadCancellable = false;
+        this.downloadPaused = false;
+        this.currentDownloadId = null;
         this.downloadDetail = this.t.download?.verifying || 'Verifying...';
 
-        const expectedHash = file.sha256;
+        var expectedHash = file.sha256;
         if (expectedHash) {
-          const ok = await this.hashVerifier.verify(blob, expectedHash);
+          var ok = await this.hashVerifier.verify(blob, expectedHash);
           if (ok) {
             this.downloadDetail = this.t.download?.verifyOk || 'SHA-256 verified';
           } else {
@@ -949,28 +1058,50 @@ const app = createApp({
         this.downloadDetail = this.t.download?.complete || 'Download complete';
         RbpanPlugins.onDownloadComplete(file);
 
-        setTimeout(() => {
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
+        setTimeout(function () {
+          var url = URL.createObjectURL(blob);
+          var a = document.createElement('a');
           a.href = url;
           a.download = file.name;
           document.body.appendChild(a);
           a.click();
           document.body.removeChild(a);
-          setTimeout(() => URL.revokeObjectURL(url), 2000);
+          setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
         }, 500);
       } catch (err) {
         if (err.message === 'Aborted') return;
         this.downloadDetail = (this.t.download?.failed || 'Download failed') + ': ' + err.message;
         this.downloadCancellable = false;
+        this.downloadPaused = false;
+        this.currentDownloadId = null;
         RbpanPlugins.onDownloadError(file, err);
       }
     },
 
+    pauseDownload() {
+      if (this.downloader && this.currentDownloadId) {
+        this.downloader.pauseDownload(this.currentDownloadId);
+        this.downloadPaused = true;
+        this.downloadDetail = this.t.download?.paused || 'Paused - click Resume to continue';
+      }
+    },
+
+    resumeDownload() {
+      if (this.downloader && this.currentDownloadId) {
+        this.downloader.resumeDownload(this.currentDownloadId);
+        this.downloadPaused = false;
+        this.downloadDetail = this.t.download?.resuming || 'Resuming...';
+      }
+    },
+
     cancelDownload() {
-      if (this.downloader) {
+      if (this.downloader && this.currentDownloadId) {
+        this.downloader.cancelDownload(this.currentDownloadId);
+      } else if (this.downloader) {
         this.downloader.cancelAll();
       }
+      this.currentDownloadId = null;
+      this.downloadPaused = false;
       this.downloadModal = false;
     },
 
@@ -1051,7 +1182,7 @@ const app = createApp({
 
     initFontFamily() {
       if (APP_CONFIG.fontFamily) {
-        document.body.style.fontFamily = APP_CONFIG.fontFamily;
+        document.documentElement.style.fontFamily = `'${APP_CONFIG.fontFamily}', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif`;
       }
     },
 
@@ -1111,6 +1242,16 @@ const app = createApp({
       localStorage.setItem('rbpan-remember-last-image', this.rememberLastImage.toString());
     },
 
+    toggleReducedMotion() {
+      this.reducedMotion = !this.reducedMotion;
+      if (this.reducedMotion) {
+        document.documentElement.setAttribute('data-reduced-motion', '');
+      } else {
+        document.documentElement.removeAttribute('data-reduced-motion');
+      }
+      localStorage.setItem('rbpan-reduced-motion', this.reducedMotion.toString());
+    },
+
     initToggleSettings() {
       const savedFolderImg = localStorage.getItem('rbpan-show-folder-image');
       if (savedFolderImg !== null) this.showFolderImage = savedFolderImg === 'true';
@@ -1123,6 +1264,12 @@ const app = createApp({
 
       const savedLastImage = localStorage.getItem('rbpan-remember-last-image');
       if (savedLastImage !== null) this.rememberLastImage = savedLastImage === 'true';
+
+      const savedReducedMotion = localStorage.getItem('rbpan-reduced-motion');
+      if (savedReducedMotion === 'true') {
+        this.reducedMotion = true;
+        document.documentElement.setAttribute('data-reduced-motion', '');
+      }
     },
 
     onDocumentClick(e) {
@@ -1133,6 +1280,7 @@ const app = createApp({
   },
 
   mounted() {
+    this._registerSW();
     this.initTheme();
     this.initLang();
     this.initAccentColor();

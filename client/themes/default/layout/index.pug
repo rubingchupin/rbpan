@@ -2,6 +2,7 @@ doctype html
 html(lang="zh-CN" translate="no" data-theme="light" class="BEAUTIFY_CLASS")
   head
     meta(charset="UTF-8")
+    meta(http-equiv="X-UA-Compatible" content="IE=edge")
     meta(name="viewport" content="width=device-width, initial-scale=1.0")
     meta(name="google" content="notranslate")
     title 如冰网盘 - 轻量级网盘系统
@@ -116,14 +117,14 @@ html(lang="zh-CN" translate="no" data-theme="light" class="BEAUTIFY_CLASS")
         // File Grid View
         .file-grid(v-if="!loading && !error && filteredFiles.length > 0 && viewMode === 'grid'")
           .file-card(v-for="file in filteredFiles" :key="file.path" :class="{ 'is-folder': file.type === 'folder' }" @click="file.type === 'folder' ? enterFolder(file) : null")
-            .card-icon(:class="getFileIcon(file)")
+            .card-icon(:class="file._icon")
               i.fa-solid.fa-folder(v-if="file.type === 'folder'")
-              i.fa-solid.fa-file-lines(v-else-if="getFileIcon(file) === 'file-md'")
-              i.fa-solid.fa-file-code(v-else-if="getFileIcon(file) === 'file-code'")
-              i.fa-solid.fa-file-image(v-else-if="getFileIcon(file) === 'file-img'")
-              i.fa-solid.fa-file-audio(v-else-if="getFileIcon(file) === 'file-audio'")
-              i.fa-solid.fa-file-video(v-else-if="getFileIcon(file) === 'file-video'")
-              i.fa-solid.fa-file-pdf(v-else-if="getFileIcon(file) === 'file-pdf'")
+              i.fa-solid.fa-file-lines(v-else-if="file._icon === 'file-md'")
+              i.fa-solid.fa-file-code(v-else-if="file._icon === 'file-code'")
+              i.fa-solid.fa-file-image(v-else-if="file._icon === 'file-img'")
+              i.fa-solid.fa-file-audio(v-else-if="file._icon === 'file-audio'")
+              i.fa-solid.fa-file-video(v-else-if="file._icon === 'file-video'")
+              i.fa-solid.fa-file-pdf(v-else-if="file._icon === 'file-pdf'")
               i.fa-solid.fa-file(v-else)
             .card-name(:title="file.name") {{ file.name }}
             .card-meta
@@ -144,14 +145,14 @@ html(lang="zh-CN" translate="no" data-theme="light" class="BEAUTIFY_CLASS")
             span.col-action {{ t.fileList?.headerAction || '操作' }}
           .table-body
             .table-row(v-for="file in filteredFiles" :key="file.path" :class="{ 'is-folder': file.type === 'folder' }" @click="file.type === 'folder' ? enterFolder(file) : null")
-              .cell-icon(:class="getFileIcon(file)")
+              .cell-icon(:class="file._icon")
                 i.fa-solid.fa-folder(v-if="file.type === 'folder'")
-                i.fa-solid.fa-file-lines(v-else-if="getFileIcon(file) === 'file-md'")
-                i.fa-solid.fa-file-code(v-else-if="getFileIcon(file) === 'file-code'")
-                i.fa-solid.fa-file-image(v-else-if="getFileIcon(file) === 'file-img'")
-                i.fa-solid.fa-file-audio(v-else-if="getFileIcon(file) === 'file-audio'")
-                i.fa-solid.fa-file-video(v-else-if="getFileIcon(file) === 'file-video'")
-                i.fa-solid.fa-file-pdf(v-else-if="getFileIcon(file) === 'file-pdf'")
+                i.fa-solid.fa-file-lines(v-else-if="file._icon === 'file-md'")
+                i.fa-solid.fa-file-code(v-else-if="file._icon === 'file-code'")
+                i.fa-solid.fa-file-image(v-else-if="file._icon === 'file-img'")
+                i.fa-solid.fa-file-audio(v-else-if="file._icon === 'file-audio'")
+                i.fa-solid.fa-file-video(v-else-if="file._icon === 'file-video'")
+                i.fa-solid.fa-file-pdf(v-else-if="file._icon === 'file-pdf'")
                 i.fa-solid.fa-file(v-else)
               .cell-name
                 span(:title="file.name") {{ file.name }}
@@ -190,8 +191,11 @@ html(lang="zh-CN" translate="no" data-theme="light" class="BEAUTIFY_CLASS")
             p.progress-text {{ (t.download?.progress || '{p}%').replace('{p}', downloadProgress) }}
             p.progress-speed(v-if="downloadSpeed") {{ (t.download?.speed || '{speed}').replace('{speed}', downloadSpeed) }}
             p.progress-detail(v-if="downloadDetail") {{ downloadDetail }}
-            button.btn(v-if="downloadCancellable" @click="cancelDownload") {{ t.download?.cancel || '取消' }}
-            button.btn(v-else @click="downloadModal = false") {{ t.download?.close || '关闭' }}
+            .modal-actions
+              button.btn.btn-sm(v-if="downloadCancellable && !downloadPaused" @click="pauseDownload") {{ t.download?.pause || '暂停' }}
+              button.btn.btn-sm(v-if="downloadCancellable && downloadPaused" @click="resumeDownload") {{ t.download?.resume || '继续' }}
+              button.btn.btn-sm(v-if="downloadCancellable" @click="cancelDownload") {{ t.download?.cancel || '取消' }}
+              button.btn.btn-sm(v-if="!downloadCancellable" @click="downloadModal = false") {{ t.download?.close || '关闭' }}
 
         // Preview Modal
         .modal-overlay.preview-overlay(v-if="previewModal" @click.self="closePreview")
@@ -276,6 +280,16 @@ html(lang="zh-CN" translate="no" data-theme="light" class="BEAUTIFY_CLASS")
                 .toggle-switch(:class="{ active: rememberLastImage }" @click="toggleRememberLastImage")
                   .toggle-track
                   .toggle-label {{ rememberLastImage ? (t.settings?.enabled || '开启') : (t.settings?.disabled || '关闭') }}
+
+            // Performance Section
+            .settings-section
+              .settings-section-title {{ t.settings?.performance || '性能' }}
+              .settings-item
+                .settings-item-label {{ t.settings?.reducedMotion || '低端设备优化' }}
+                .settings-item-desc {{ t.settings?.reducedMotionDesc || '关闭动效和高斯模糊等特效以提升性能' }}
+                .toggle-switch(:class="{ active: reducedMotion }" @click="toggleReducedMotion")
+                  .toggle-track
+                  .toggle-label {{ reducedMotion ? (t.settings?.enabled || '开启') : (t.settings?.disabled || '关闭') }}
 
     <!-- VUE_PLACEHOLDER -->
     <!-- JS_PLACEHOLDER -->

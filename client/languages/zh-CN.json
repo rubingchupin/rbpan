@@ -35,6 +35,8 @@
     "processingCustomFonts": "正在处理自定义字体...",
     "fontLoaded": "∟ 字体已加载",
     "fontNotFound": "∟ 未找到字体文件",
-    "fontFamilyApplied": "∟ 字体族已应用"
+    "fontFamilyApplied": "∟ 字体族已应用",
+    "ieCompat": "正在生成 IE 兼容层...",
+    "ieCompatDone": "IE 兼容层已生成"
   }
 }

@@ -31,6 +31,12 @@
     "bundlingHighlight": "Bundling highlight.js...",
     "highlightBundled": "highlight.js bundled",
     "highlightBundleFailed": "highlight.js bundle failed",
-    "fontAwesomeBuilt": "FontAwesome integrated"
+    "fontAwesomeBuilt": "FontAwesome integrated",
+    "processingCustomFonts": "Processing custom fonts...",
+    "fontLoaded": "∟ Font loaded",
+    "fontNotFound": "∟ Font not found",
+    "fontFamilyApplied": "∟ Font family applied",
+    "ieCompat": "Generating IE compatibility layer...",
+    "ieCompatDone": "IE compatibility layer generated"
   }
 }

@@ -5,6 +5,28 @@ const pug = require('pug');
 const stylus = require('stylus');
 const esbuild = require('esbuild');
 
+// 确保 Windows 控制台正确输出 UTF-8 中文（避免叠字）
+if (process.platform === 'win32') {
+  const { execSync } = require('child_process');
+  try { execSync('chcp 65001 > nul', { stdio: 'ignore' }); } catch (e) {}
+
+  console.log = function(...args) {
+    let msg = args.join(' ');
+    msg = msg.replace(/\n/g, '\r\n');
+    process.stdout.write(msg + '\r\n');
+  };
+  console.warn = function(...args) {
+    let msg = args.join(' ');
+    msg = msg.replace(/\n/g, '\r\n');
+    process.stderr.write(msg + '\r\n');
+  };
+  console.error = function(...args) {
+    let msg = args.join(' ');
+    msg = msg.replace(/\n/g, '\r\n');
+    process.stderr.write(msg + '\r\n');
+  };
+}
+
 // 加载 YAML 配置文件
 const configPath = path.join(__dirname, '_config.yml');
 const siteConfig = yaml.load(fs.readFileSync(configPath, 'utf8'));
@@ -52,6 +74,11 @@ console.log(`  ${__('client.theme')}:  ${themeConfig.name || themeName} v${theme
 console.log(`  ${__('client.lang')}:   ${siteConfig.language}`);
 console.log(`  ${__('client.minify')}:  ${siteConfig.minify !== false ? 'ON' : 'OFF'}`);
 console.log(`  ${__('client.beautify')}: ${siteConfig.beautify !== false ? 'ON' : 'OFF'}`);
+
+const ieCompat = siteConfig.ieCompat !== false;
+if (ieCompat) {
+  console.log(`  ${__('client.ieCompat') || 'IE Compatibility'}: ON`);
+}
 
 const vuePath = path.join(__dirname, 'node_modules', 'vue', 'dist', 'vue.global.prod.js');
 if (!fs.existsSync(vuePath)) {
@@ -164,6 +191,7 @@ if (fontFiles.length > 0) {
         '.woff': 'woff',
         '.ttf': 'truetype',
         '.otf': 'opentype',
+        '.eot': 'embedded-opentype',
       };
       const format = fontFormatMap[fontExt] || fontExt.replace('.', '');
       
@@ -179,17 +207,32 @@ if (fontFiles.length > 0) {
         fontFamilies.push(familyName);
       }
       
-      // 生成 @font-face 声明
+      // 生成 @font-face 声明（含多格式回退以兼容 IE 等旧浏览器）
+      const baseFontName = fontName.replace(fontExt, '');
+      const altFormats = [];
+      const altExts = fontExt === '.woff2' ? ['.woff', '.ttf', '.eot'] : fontExt === '.woff' ? ['.ttf', '.eot'] : [];
+      for (const altExt of altExts) {
+        const altName = baseFontName + altExt;
+        const altPath = path.resolve(fontsDir, altName);
+        if (fs.existsSync(altPath)) {
+          if (!fs.existsSync(destFontsDir)) fs.mkdirSync(destFontsDir, { recursive: true });
+          fs.copyFileSync(altPath, path.join(destFontsDir, altName));
+          altFormats.push(`url('fonts/${altName}') format('${fontFormatMap[altExt] || altExt.replace('.', '')}')`);
+        }
+      }
+      
+      const srcList = [`url('fonts/${fontName}') format('${format}')`, ...altFormats].join(',\n       ');
+      
       customFontCss += `
 @font-face {
   font-family: '${familyName}';
-  src: url('fonts/${fontName}') format('${format}');
+  src: ${srcList};
   font-weight: ${fontWeight};
   font-style: ${fontStyle};
   font-display: swap;
 }
 `;
-      console.log(`    ${__('client.fontLoaded') || 'Font loaded'}: ${fontName} (${format}, ${fontWeight}, ${fontStyle})`);
+      console.log(`    ${__('client.fontLoaded') || 'Font loaded'}: ${fontName} (${format}, ${fontWeight}, ${fontStyle})${altFormats.length > 0 ? ' + ' + altFormats.length + ' fallback(s)' : ''}`);
     } else {
       console.warn(`    ${__('client.fontNotFound') || 'Font not found'}: ${fullFontPath}`);
     }
@@ -199,7 +242,7 @@ if (fontFiles.length > 0) {
   if (fontConfig.family && fontFamilies.length > 0) {
     const fontFamilyList = fontFamilies.map(f => `'${f}'`).join(', ');
     customFontCss += `
-body {
+html, body, button, input, select, textarea, .markdown-body, .preview-content, .announcement-body, .notification-body, .readme-box, .modal-content, .settings-panel, .file-card, pre, code {
   font-family: ${fontFamilyList}, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
 }
 `;
@@ -234,7 +277,7 @@ const i18nKo = 'const I18N_KO = ' + fs.readFileSync(path.join(langDir, 'ko.json'
 const pluginRegistry = fs.readFileSync(path.join(pluginDir, 'registry.js'), 'utf-8');
 const downloaderJs = fs.readFileSync(path.join(jsDir, 'downloader.js'), 'utf-8');
 const hashVerifierJs = fs.readFileSync(path.join(jsDir, 'hashVerifier.js'), 'utf-8');
-const rbpanLinkJs = fs.readFileSync(path.join(jsDir, 'rbpan-link.js'), 'utf-8');
+const apiJs = fs.readFileSync(path.join(jsDir, 'api.js'), 'utf-8');
 const appJs = fs.readFileSync(path.join(jsDir, 'app.js'), 'utf-8');
 
 let pluginCode = '';
@@ -288,7 +331,7 @@ const combinedJs =
   highlightJs + '\n' +
   downloaderJs + '\n' +
   hashVerifierJs + '\n' +
-  rbpanLinkJs + '\n' +
+  apiJs + '\n' +
   appJs;
 
 let minifiedJs = combinedJs;
@@ -301,8 +344,7 @@ if (siteConfig.minify !== false) {
       minifyIdentifiers: true,
       minifySyntax: true,
       target: 'es2015',
-      keepNames: false,
-      mangleProps: /^_/,
+      keepNames: true,
     });
     minifiedJs = result.code;
     const ratio = ((1 - minifiedJs.length / combinedJs.length) * 100).toFixed(0);
@@ -333,6 +375,164 @@ const faviconTag = /^https?:\/\//.test(faviconUrl)
 
 const beautifyClass = siteConfig.beautify !== false ? 'beautify-enabled' : '';
 
+let ieCss = '';
+let iePolyfill = '';
+
+if (ieCompat) {
+  console.log(`  ${__('client.generatingIeCompat') || 'Generating IE compatibility layer...'}`);
+
+  const ieFallbackVars = {
+    '--accent': '#6366f1',
+    '--accent-via': '#8b5cf6',
+    '--accent-soft': 'rgba(99,102,241,0.08)',
+    '--accent-hover': '#4f46e5',
+    '--accent-glow': 'rgba(99,102,241,0.25)',
+    '--bg': '#f0f2f5',
+    '--surface': 'rgba(255,255,255,0.95)',
+    '--surface-strong': 'rgba(255,255,255,1)',
+    '--surface-weak': 'rgba(241,245,249,0.9)',
+    '--surface-hover': 'rgba(255,255,255,0.98)',
+    '--text': '#1a1a2e',
+    '--text-secondary': '#5a6078',
+    '--text-muted': '#8b90a5',
+    '--border': 'rgba(200,205,220,0.6)',
+    '--border-rgb': '200, 205, 220',
+    '--border-strong': 'rgba(180,185,200,0.8)',
+    '--shadow-sm': '0 2px 8px rgba(0,0,0,0.06)',
+    '--shadow': '0 4px 16px rgba(0,0,0,0.08)',
+    '--shadow-md': '0 8px 24px rgba(0,0,0,0.1)',
+    '--shadow-lg': '0 16px 40px rgba(0,0,0,0.14)',
+    '--folder': '#f59e0b',
+    '--folder-bg': 'rgba(245,158,11,0.1)',
+    '--folder-hover-bg': 'rgba(245,158,11,0.16)',
+    '--file-bg': 'rgba(241,245,249,0.5)',
+    '--file-hover': 'rgba(248,250,252,0.7)',
+    '--folder-hover': 'rgba(99,102,241,0.06)',
+    '--progress-bg': 'rgba(226,232,240,0.5)',
+    '--radius': '16px',
+    '--radius-sm': '10px',
+    '--radius-lg': '20px',
+    '--radius-xl': '28px',
+    '--transition': '0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    '--glass-blur': '0px',
+    '--glass-saturate': '100%',
+    '--bar-bg': 'rgba(255,255,255,0.95)',
+    '--bar-blur': '0px',
+    '--bar-item-bg': 'rgba(241,245,249,0.8)',
+    '--bar-item-border': 'rgba(200,205,220,0.5)',
+    '--bar-item-hover': 'rgba(241,245,249,0.95)',
+    '--bar-text': '#1a1a2e',
+    '--bar-text-sub': '#5a6078',
+    '--bar-border': '1px solid rgba(200,205,220,0.5)',
+    '--lang-btn-size': '2.375rem',
+    '--lang-btn-font-size': '0.875rem',
+    '--lang-btn-font-weight': '400',
+    '--lang-dropdown-min-width': '11.25rem',
+    '--lang-item-padding': '0.6875rem 1rem',
+    '--loader-bg': '#f0f2f5',
+    '--loader-logo-bg': 'rgba(99,102,241,0.15)',
+    '--loader-logo-color': '#6366f1',
+    '--loader-title-color': '#1a1a2e',
+    '--loader-bar-bg': 'rgba(99,102,241,0.15)',
+    '--loader-bar-fill': '#6366f1',
+    '--loader-text-color': '#5a6078',
+  };
+
+  let combinedCss = cssContent + '\n' + (customFontCss || '') + '\n' + (fontAwesomeCss || '');
+  ieCss = combinedCss;
+
+  for (const [varName, fallback] of Object.entries(ieFallbackVars)) {
+    const escaped = varName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    ieCss = ieCss.replace(new RegExp('var\\(' + escaped + '([^)]*)\\)', 'g'), fallback);
+    ieCss = ieCss.replace(new RegExp('var\\(' + escaped + ',([^)]*)\\)', 'g'), fallback);
+  }
+
+  ieCss = ieCss.replace(/var\(--[^)]+\)/g, 'initial');
+  ieCss = ieCss.replace(/var\(--[^,)]+,[^)]*\)/g, (match) => {
+    const commaIdx = match.indexOf(',');
+    const fallbackVal = match.substring(commaIdx + 1, match.length - 1).trim();
+    return fallbackVal;
+  });
+
+  ieCss = ieCss.replace(/backdrop-filter:\s*[^;!]+[;!]/gi, '');
+  ieCss = ieCss.replace(/-webkit-backdrop-filter:\s*[^;!]+[;!]/gi, '');
+
+  ieCss = ieCss.replace(/inset\s+0/g, 'top:0;left:0;right:0;bottom:0');
+
+  ieCss = ieCss.replace(/scroll-behavior:\s*smooth[;!]/gi, '');
+
+  if (siteConfig.minify !== false) {
+    ieCss = ieCss
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/\s+/g, ' ')
+      .replace(/\s*([{}:;,])\s*/g, '$1')
+      .replace(/;\}/g, '}')
+      .trim();
+  }
+
+  iePolyfill = `
+(function(){
+  if(typeof Promise==='undefined'||typeof fetch==='undefined'||typeof Array.from==='undefined'){
+    var d=document;
+    var s=d.createElement('script');
+    s.src='https://cdn.jsdelivr.net/npm/promise-polyfill@8/dist/polyfill.min.js';
+    d.head.appendChild(s);
+    var s2=d.createElement('script');
+    s2.src='https://cdn.jsdelivr.net/npm/whatwg-fetch@3/dist/fetch.umd.js';
+    d.head.appendChild(s2);
+  }
+  if(!String.prototype.startsWith){
+    String.prototype.startsWith=function(s,p){p=p||0;return this.indexOf(s,p)===p;};
+  }
+  if(!String.prototype.endsWith){
+    String.prototype.endsWith=function(s,p){var l=(p===undefined?this.length:p)-s.length;return this.indexOf(s,l)===l;};
+  }
+  if(!String.prototype.includes){
+    String.prototype.includes=function(s,p){return this.indexOf(s,p)!==-1;};
+  }
+  if(!Array.prototype.find){
+    Array.prototype.find=function(fn){for(var i=0;i<this.length;i++){if(fn(this[i],i,this))return this[i];}};
+  }
+  if(!Array.prototype.findIndex){
+    Array.prototype.findIndex=function(fn){for(var i=0;i<this.length;i++){if(fn(this[i],i,this))return i;}return -1;};
+  }
+  if(!Array.from){
+    Array.from=function(a,fn,ctx){var r=[];if(typeof a==='string'||a instanceof String){for(var i=0;i<a.length;i++){r.push(fn?fn.call(ctx,a[i],i):a[i]);}}else{for(var i=0;i<a.length;i++){r.push(fn?fn.call(ctx,a[i],i):a[i]);}}return r;};
+  }
+  if(!Object.assign){
+    Object.assign=function(t){for(var i=1;i<arguments.length;i++){var s=arguments[i];if(s){for(var k in s){if(Object.prototype.hasOwnProperty.call(s,k))t[k]=s[k];}}}return t;};
+  }
+  if(!Element.prototype.closest){
+    Element.prototype.closest=function(s){var e=this;do{if(e.matches(s))return e;e=e.parentElement||e.parentNode;}while(e!==null&&e.nodeType===1);return null;};
+  }
+  if(!Number.isNaN){Number.isNaN=function(v){return v!==v;};}
+  if(!Number.isFinite){Number.isFinite=function(v){return typeof v==='number'&&isFinite(v);};}
+  if(!String.prototype.repeat){
+    String.prototype.repeat=function(n){var r='';for(var i=0;i<n;i++)r+=this;return r;};
+  }
+  if(!String.prototype.padStart){
+    String.prototype.padStart=function(l,s){var p=s||' ';var r=this;while(r.length<l)r=p+r;return r;};
+  }
+  if(!String.prototype.padEnd){
+    String.prototype.padEnd=function(l,s){var p=s||' ';var r=this;while(r.length<l)r=r+p;return r;};
+  }
+  if(!window.crypto||!window.crypto.subtle){
+    window.crypto=window.crypto||{};
+    window.crypto.subtle=window.crypto.subtle||{};
+  }
+  if(!window.ReadableStream){
+    window.ReadableStream=function(){};
+  }
+  if(!window.AbortController){
+    window.AbortController=function(){this.signal={aborted:false};};
+    window.AbortController.prototype.abort=function(){this.signal.aborted=true;};
+  }
+})();
+`;
+
+  console.log(`  ${__('client.ieCompatDone') || 'IE compatibility layer generated'} (CSS ${(Buffer.byteLength(ieCss, 'utf-8') / 1000).toFixed(1)} KB, polyfill ${(Buffer.byteLength(iePolyfill, 'utf-8') / 1000).toFixed(1)} KB)`);
+}
+
 function minifyCss(css) {
   if (siteConfig.minify === false) return css;
   return css
@@ -352,15 +552,23 @@ function minifyHtml(html) {
 }
 
 function buildHtml(htmlContent) {
+  let ieConditional = '';
+  if (ieCompat) {
+    ieConditional = '<!--[if IE]>\n' +
+      '<style>\n' + ieCss + '\n</style>\n' +
+      '<script>\n' + iePolyfill + '\n</script>\n' +
+      '<![endif]-->';
+  }
+
   let result = htmlContent
     .replace('BEAUTIFY_CLASS', beautifyClass)
     .replace('<!-- FAVICON_PLACEHOLDER -->', faviconTag)
     .replace('<!-- CSS_PLACEHOLDER -->', `<style>\n${minifyCss(cssContent)}\n${customFontCss ? minifyCss(customFontCss) : ''}\n</style>`)
     .replace('<!-- FA_CSS_PLACEHOLDER -->', fontAwesomeCss ? `<style>\n${minifyCss(fontAwesomeCss)}\n</style>` : '')
-    .replace('<!-- CUSTOM_HEAD_PLACEHOLDER -->', customHead + '\n' + customCssTags + '\n' + externalLibs)
+    .replace('<!-- CUSTOM_HEAD_PLACEHOLDER -->', customHead + '\n' + customCssTags + '\n' + externalLibs + '\n' + ieConditional)
     .replace('<!-- CUSTOM_BODY_PLACEHOLDER -->', customBody + '\n' + customJsTags)
-    .replace('<!-- VUE_PLACEHOLDER -->', `<script>\n${vueJs}\n</script>`)
-    .replace('<!-- JS_PLACEHOLDER -->', `<script>\n${minifiedJs}\n</script>`);
+    .replace('<!-- VUE_PLACEHOLDER -->', () => `<script>\n${vueJs}\n</script>`)
+    .replace('<!-- JS_PLACEHOLDER -->', () => `<script>\n${minifiedJs}\n</script>`);
   return minifyHtml(result);
 }
 
@@ -374,7 +582,7 @@ const final404Html = page404Html
   .replace('<!-- FAVICON_PLACEHOLDER -->', faviconTag)
   .replace('<!-- CSS_PLACEHOLDER -->', `<style>\n${minifyCss(cssContent)}\n</style>`)
   .replace('<!-- FA_CSS_PLACEHOLDER -->', fontAwesomeCss ? `<style>\n${minifyCss(fontAwesomeCss)}\n</style>` : '')
-  .replace('<!-- CUSTOM_HEAD_PLACEHOLDER -->', customHead + '\n' + customCssTags)
+  .replace('<!-- CUSTOM_HEAD_PLACEHOLDER -->', customHead + '\n' + customCssTags + '\n' + (ieCompat ? '<!--[if IE]>\n<style>\n' + ieCss + '\n</style>\n<script>\n' + iePolyfill + '\n</script>\n<![endif]-->' : ''))
   .replace('<!-- CUSTOM_BODY_PLACEHOLDER -->', customBody + '\n' + customJsTags)
   .replace('<!-- VUE_PLACEHOLDER -->', '')
   .replace('<!-- JS_PLACEHOLDER -->', '');
@@ -385,8 +593,14 @@ const page404Size = (Buffer.byteLength(final404Html, 'utf-8') / 1000).toFixed(1)
 fs.writeFileSync(path.join(outputDir, '_headers'), '/*\n  Access-Control-Allow-Origin: *\n', 'utf-8');
 fs.writeFileSync(path.join(outputDir, '_redirects'), '/* /index.html 200\n', 'utf-8');
 
-fs.writeFileSync(path.join(outputDir, 'rbpan-link.js'), rbpanLinkJs, 'utf-8');
-console.log(`  ${__('client.rbpanLinkBuilt')}`);
+const swJsPath = path.join(sourceDir, 'sw.js');
+if (fs.existsSync(swJsPath)) {
+  fs.copyFileSync(swJsPath, path.join(outputDir, 'sw.js'));
+  console.log(`  sw.js ${__('client.sourceCopied') || '已复制到输出目录'}`);
+}
+
+fs.writeFileSync(path.join(outputDir, 'api.js'), apiJs, 'utf-8');
+console.log(`  ${__('client.apiBuilt') || 'api.js 已生成'}`);
 
 if (fontAwesomeCss && fs.existsSync(faWebfontsDir)) {
   const destWebfontsDir = path.join(outputDir, 'webfonts');

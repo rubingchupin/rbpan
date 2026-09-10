@@ -256,9 +256,9 @@ set "BRANCH=%~3"
 set "MSG=%~4"
 
 REM 清理 URL 中的多余字符（反引号、空格等）
-set "REPO_URL=%REPO_URL_IN:`=%"
-set "REPO_URL=%REPO_URL: =%"
-set "REPO_URL=%REPO_URL:"=%"
+set "REPO_URL=!REPO_URL_IN:`=!"
+set "REPO_URL=!REPO_URL: =!"
+set "REPO_URL=!REPO_URL:"=!"
 
 echo [DEBUG] 原始URL: !REPO_URL!
 echo [DEBUG] 选择协议: !GIT_PROTOCOL!
